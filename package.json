@@ -1,0 +1,16 @@
+{
+  "name": "baselinejs",
+  "version": "0.0.0",
+  "description": "Baseline.js is a framework used by full stack JavaScript applications to share code and data between the client and the server.",
+  "main": "baseline.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rotunda Software",
+  "dependencies" : {
+    "underscore": "~1.6.0",
+    "class-con-leche": "~0.0.0",
+    "steamer": "~0.0.0"
+  },
+  "license": "MIT"
+}
