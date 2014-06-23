@@ -10,7 +10,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
 		if( _.isUndefined( this.collectionName ) ) throw new Error( "The collectionName attribute must be defined on collection service instances." );
 		//if( _.isUndefined( this.fieldNames ) ) throw new Error( "The fieldNames attribute must be defined on data service instances." );
-
+		options = options || {};
 		this.length = 0;
 
 		this._fieldNames = this.fieldNames;
@@ -19,7 +19,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		this._idFieldName = options.idFieldName;
 
-		this._super( options );
+		// this._super( options );
 	},
 
 	createContainer : function() {
