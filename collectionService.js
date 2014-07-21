@@ -1,25 +1,32 @@
-var _ = require( "underscore" );
-var BaseService = require( "./baseService" );
-var steamer = require( "steamer" );
+var _ = require( 'underscore' );
+var BaseService = require( './baseService' );
+var steamer = require( 'steamer' );
+var Events = require( 'backbone-events-standalone' );
 
 var mMachineId = parseInt( Math.random() * 0xFFFFFF, 10 );
-var mProcessId = typeof( process ) === "object" && typeof( process.pid ) === "number" ? process.pid : Math.floor( Math.random() * 32767 );
+var mProcessId = typeof( process ) === 'object' && typeof( process.pid ) === 'number' ? process.pid : Math.floor( Math.random() * 32767 );
 var mUniqueIdIncrement = 0;
 
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
-		if( _.isUndefined( this.collectionName ) ) throw new Error( "The collectionName attribute must be defined on collection service instances." );
-		//if( _.isUndefined( this.fieldNames ) ) throw new Error( "The fieldNames attribute must be defined on data service instances." );
-		options = options || {};
-		this.length = 0;
+		options = _.defaults( {}, options, {
+			idFieldName : "_id"
+		} );
 
-		this._fieldNames = this.fieldNames;
+		if( _.isUndefined( this.collectionName ) ) throw new Error( 'The collectionName attribute must be defined on collection service instances.' );
+		//if( _.isUndefined( this.fieldNames ) ) throw new Error( 'The fieldNames attribute must be defined on data service instances.' );
+
+		this.length = 0;
+		
+		//this._fieldNames = this.fieldNames;
 		this._recordIds = [];
 		this._recordsById = {};
 
 		this._idFieldName = options.idFieldName;
 
-		// this._super( options );
+		Events.mixin( this );
+
+		BaseService.prototype.initialize( options );
 	},
 
 	createContainer : function() {
@@ -45,17 +52,17 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		this.merge( [ initialFieldValues ] );
 
-		this.trigger( "operation", "createRecord", params );
-		this.trigger( "create", initialFieldValues, options );
+		this.trigger( 'operation', 'createRecord', params );
+		this.trigger( 'create', initialFieldValues, options );
 
 		return initialFieldValues[ this._idFieldName ];
 	},
 
 	get : function( recordId, fieldName ) {
-		if( ! this._recordsById[ recordId ] ) throw new Error( "Record id " + recordId + " is not present in table \"" + this.collectionName + "\"." );
+		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 
 		var fieldValue = this._recordsById[ recordId ][ fieldName ];
-		if( _.isUndefined( fieldValue ) ) throw new Error( "Field \"" + fieldName + "\" is not present for record id " + recordId + " in table \"" + this.collectionName + "\"." );
+		if( _.isUndefined( fieldValue ) ) throw new Error( 'Field \'' + fieldName + '\' is not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
 		return this._copyFieldValue( fieldValue );
 	},
@@ -63,9 +70,9 @@ var CollectionService = module.exports = BaseService.extend( {
 	gets : function( recordId, fields ) {
 		var _this = this;
 
-		if( ! this._recordsById[ recordId ] ) throw new Error( "Record id " + recordId + " is not present in table \"" + this.collectionName + "\"." );
+		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 
-		if( fields === "*" ) fields = _.keys( this._recordsById[ recordId ] );
+		if( fields === '*' ) fields = _.keys( this._recordsById[ recordId ] );
 
 		if( ! _.isArray( fields ) ) fields = Array.prototype.slice.apply( arguments, 1 );
 		var values = {};
@@ -89,14 +96,14 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	rawSet : function( recordId, fieldName, fieldValue ) {
-		if( ! this._recordsById[ recordId ] ) throw new Error( "Record id " + recordId + " is not present in table \"" + this.collectionName + "\"." );
+		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 		
-		if( fieldName === this._idFieldName ) throw new Error( "Changing the id field of an existing record is not supported." );
+		if( fieldName === this._idFieldName ) throw new Error( 'Changing the id field of an existing record is not supported.' );
 		
 		// not sure we want to check if the data exists before setting it.. for example, we create a new record, and then want to fill
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
 		// but jury is still out, so we will do it this way for now.
-		//if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( "Field \"" + fieldName + "\" not present for record id " + recordId + " in table \"" + this.collectionName + "\"." );
+		//if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 		this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
 
 		var params = {
@@ -106,12 +113,12 @@ var CollectionService = module.exports = BaseService.extend( {
 			value : fieldValue
 		};
 
-		this.trigger( "operation", "setField", params );
-		this.trigger( "set", recordId, fieldName, fieldValue );
+		this.trigger( 'operation', 'setField', params );
+		this.trigger( 'set', recordId, fieldName, fieldValue );
 	},
 
 	destroy : function( recordId ) {
-		if( ! this._recordsById[ recordId ] ) throw new Error( "Record id " + recordId + " is not present." );
+		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
 	
 		this._recordIds = _.without( this._recordIds, recordId );
 		delete this._recordsById[ recordId ];
@@ -122,8 +129,8 @@ var CollectionService = module.exports = BaseService.extend( {
 			recordId : recordId
 		};
 
-		this.trigger( "operation", "destroyRecord", params );
-		this.trigger( "destroy", recordId );
+		this.trigger( 'operation', 'destroyRecord', params );
+		this.trigger( 'destroy', recordId );
 	},
 
 	ids : function() {
@@ -165,7 +172,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	sort: function() {
 		var _this = this;
 		if( ! this.comparator )
-			throw new Error( "Cannot sort without a comparator" );
+			throw new Error( 'Cannot sort without a comparator' );
 		
 		if( _.isString( this.comparator ) || this.comparator.length === 1 )
 			this._recordIds = this.sortBy( this.comparator, this );
@@ -178,7 +185,7 @@ var CollectionService = module.exports = BaseService.extend( {
 			var recordId = thisRecord[ this._idFieldName ];
 
 			if( _.isUndefined( recordId ) )
-				throw new Error( "Each record must define a unique id." );
+				throw new Error( 'Each record must define a unique id.' );
 
 			// make sure the attributes we end up storing are copies, in case
 			// somebody is using the original newRecords.
@@ -209,7 +216,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	where : function( attrs, first ) {
 		var _this = this;
 		if( _.isEmpty( attrs ) ) return first ? void 0 : [];
-		return this[ first ? "find" : "filter" ]( function( thisRecordId ) {
+		return this[ first ? 'find' : 'filter' ]( function( thisRecordId ) {
 			for( var key in attrs ) {
 				if( attrs[ key ] !== _this._recordsById[ thisRecordId ][ key ] ) return false;
 			}
@@ -249,20 +256,20 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		mUniqueIdIncrement++;
 
-		return "00000000".substr( 0, 8 - timestamp.length ) + timestamp +
-           "000000".substr( 0, 6 - machineId.length ) + machineId +
-           "0000".substr( 0, 4 - processId.length ) + processId +
-           "000000".substr( 0, 6 - increment.length ) + increment;
+		return '00000000'.substr( 0, 8 - timestamp.length ) + timestamp +
+           '000000'.substr( 0, 6 - machineId.length ) + machineId +
+           '0000'.substr( 0, 4 - processId.length ) + processId +
+           '000000'.substr( 0, 6 - increment.length ) + increment;
 	}
 } );
 
 // Underscore methods that we want to implement for each table.
-var underscoreTableMethodNames = [ "forEach", "each", "map", "collect", "reduce", "foldl",
-	"inject", "reduceRight", "foldr", "find", "detect", "filter", "select",
-	"reject", "every", "all", "some", "any", "include", "contains", "invoke",
-	"max", "min", "sortedIndex", "size", "first", "head", "take",
-	"initial", "rest", "tail", "drop", "last", "without", "indexOf", "shuffle",
-	"lastIndexOf", "isEmpty" ];
+var underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
+	'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
+	'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
+	'max', 'min', 'sortedIndex', 'size', 'first', 'head', 'take',
+	'initial', 'rest', 'tail', 'drop', 'last', 'without', 'indexOf', 'shuffle',
+	'lastIndexOf', 'isEmpty' ];
 
 // Mix in each Underscore method as a proxy to _recordIds.
 _.each( underscoreTableMethodNames, function( thisMethodName ) {
@@ -274,7 +281,7 @@ _.each( underscoreTableMethodNames, function( thisMethodName ) {
 } );
 
 // Underscore methods that take a property name as an argument.
-var attributeMethods = [ "groupBy", "countBy", "sortBy" ];
+var attributeMethods = [ 'groupBy', 'countBy', 'sortBy' ];
 
 // Use attributes instead of properties.
 _.each( attributeMethods, function( method ) {
