@@ -24,7 +24,7 @@ window.Wikkem.baseline = new Baseline( {
 
 A baseline instance is made up of services. A service is a module that contains application logic and potentially accessors for in-memory data that is operated on by that logic. Services may depend on each other.
 
-[!](https://github.com/rotundasoftware/baselinejs/blob/master/docs/anatomy.png)
+![](https://github.com/rotundasoftware/baselinejs/blob/master/docs/anatomy.png)
 
 ### Collection services
 
@@ -40,7 +40,7 @@ When used on the client side, collectionServices are very similar to backbone.js
 
 Baseline streamlines the process of bootstrapping data from the client to the server using steamer.
 
-[!](https://github.com/rotundasoftware/baselinejs/blob/master/docs/bootstrapping.png)
+![](https://github.com/rotundasoftware/baselinejs/blob/master/docs/bootstrapping.png)
 
 
 
