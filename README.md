@@ -1,4 +1,6 @@
-Basline is a small library that organizes application logic and data in node.js web applications into interdependent services that can be used both on the client and the server. It provides a small, simple, in memory data store to organize and access data on the client. The same in memory database and logic can also be used on the server side.
+# baseline.js
+
+basline.js is a small library that organizes application logic and data in node.js web applications into interdependent services that can be used both on the client and the server. It provides a small, simple, in memory data store to organize and access data on the client. The same in memory database and logic can also be used on the server side.
 
 A baseline object may be  initialized both on the server and on the client. On the server, a baseline object is initialized on a per request basis. For example, in an express.js app,
 
@@ -28,7 +30,7 @@ A baseline instance is made up of services. A service is a module that contains 
 
 ### Collection services
 
-collectionServices contain the application logic and the means to access in-memory data that is relevant to a database collection or table.
+collectionServices contain the application logic and the means to access in-memory data that is a subset of the data in a database collection or table.
 
 When used on the client side, collectionServices are very similar to backbone.js collections, with a few key differences:
 
@@ -38,7 +40,7 @@ When used on the client side, collectionServices are very similar to backbone.js
 
 ## Bootstrapping data from the server to the client
 
-Baseline streamlines the process of bootstrapping data from the client to the server using steamer.
+The process of bootstrapping data from the client to the server is streamlined using [steamer](https://github.com/rotundasoftware/steamer).
 
 ![](https://github.com/rotundasoftware/baselinejs/blob/master/docs/bootstrapping.png)
 
