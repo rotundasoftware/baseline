@@ -2,7 +2,7 @@ var _ = require( "underscore" );
 var Class = require( "class-con-leche" );
 var steamer = require( "steamer" );
 
-var Baseline = module.exports = Class.extend( {
+module.exports = Class.extend( {
 	initialize : function( services ) {
 		var _this = this;
 
@@ -55,8 +55,7 @@ var Baseline = module.exports = Class.extend( {
 			boat.stuff( onGotResults );
 		}
 		else {
-			// no arbitrator available in memory, we have to do
-			// a remote sync request via our sync url. 
+			// on the client side we have to do a remote sync request via our sync url. 
 			if( ! this._syncUrl ) return callback( new Error( "Attempt to sync but no syncUrl has been supplied." ) );
 
 			return $.ajax( {
@@ -104,6 +103,6 @@ var Baseline = module.exports = Class.extend( {
 	}
 } );
 
-_isServer = function() {
+function _isServer() {
 	return( typeof window === "undefined" );
-};
+}
