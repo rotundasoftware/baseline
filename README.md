@@ -1,6 +1,6 @@
 # baseline.js
 
-basline.js is a small library that organizes application logic and data in node.js web applications into interdependent services that can be used both on the client and the server. It provides a small, simple, in memory data store to organize and access data on the client. The same in memory database and logic can also be used on the server side.
+basline.js is a small library that organizes application logic and data in node.js web applications into interdependent services that can be used both on the client and the server. It provides a small, simple, in-memory data store to organize and access data on the client. The same in-memory database and logic can also be used on the server side.
 
 A baseline object may be  initialized both on the server and on the client. On the server, a baseline object is initialized on a per request basis. For example, in an express.js app,
 
