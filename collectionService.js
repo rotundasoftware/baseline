@@ -72,7 +72,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 
-		if( fields === '*' ) fields = _.keys( this._recordsById[ recordId ] );
+		if( _.isUndefined( fields ) ) fields = _.keys( this._recordsById[ recordId ] );
 
 		if( ! _.isArray( fields ) ) fields = Array.prototype.slice.apply( arguments, 1 );
 		var values = {};
@@ -169,7 +169,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		return true;
 	},
 
-	sort: function() {
+	sort : function() {
 		var _this = this;
 		if( ! this.comparator )
 			throw new Error( 'Cannot sort without a comparator' );
