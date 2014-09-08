@@ -74,7 +74,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		if( _.isUndefined( fields ) ) fields = _.keys( this._recordsById[ recordId ] );
 
-		if( ! _.isArray( fields ) ) fields = Array.prototype.slice.apply( arguments, 1 );
+		if( ! _.isArray( fields ) ) fields = Array.prototype.slice.apply( arguments, [ 1 ] );
 		var values = {};
 
 		_.each( fields, function( thisFieldName ) {
