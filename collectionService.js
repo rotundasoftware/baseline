@@ -2,6 +2,7 @@ var _ = require( 'underscore' );
 var BaseService = require( './baseService' );
 var steamer = require( 'steamer' );
 var Events = require( 'backbone-events-standalone' );
+var uuid = require( 'node-uuid' );
 
 var mMachineId = parseInt( Math.random() * 0xFFFFFF, 10 );
 var mProcessId = typeof( process ) === 'object' && typeof( process.pid ) === 'number' ? process.pid : Math.floor( Math.random() * 32767 );
@@ -10,7 +11,7 @@ var mUniqueIdIncrement = 0;
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
 		options = _.defaults( {}, options, {
-			idFieldName : "_id"
+			idFieldName : "id"
 		} );
 
 		if( _.isUndefined( this.collectionName ) ) throw new Error( 'The collectionName attribute must be defined on collection service instances.' );
@@ -247,19 +248,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	_getUniqueId : function() {
-		var timestamp = Math.floor( new Date().valueOf() / 1000 ).toString( 16 ).substr( 0, 8 );
-		var machineId = mMachineId.toString( 16 ).substr( 0, 6 );
-		var processId =  mProcessId.toString( 16 ).substr( 0, 4 );
-
-		if( mUniqueIdIncrement > 0xffffff ) mUniqueIdIncrement = 0;
-		var increment = mUniqueIdIncrement.toString( 16 ).substr( 0, 6 );
-
-		mUniqueIdIncrement++;
-
-		return '00000000'.substr( 0, 8 - timestamp.length ) + timestamp +
-           '000000'.substr( 0, 6 - machineId.length ) + machineId +
-           '0000'.substr( 0, 4 - processId.length ) + processId +
-           '000000'.substr( 0, 6 - increment.length ) + increment;
+		return uuid.v4();
 	}
 } );
 

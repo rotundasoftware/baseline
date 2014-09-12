@@ -9,7 +9,7 @@ var baseline = require( 'baseline' );
 
 app.use( function( req, res, cb ) {
 	req.baseline = new Baseline( {
-		rt : new RouteService( { routes : routeHash } )
+		rt : new ContactsService( { collectionName : 'contacts' } )
 	} );
 } );
 ```
@@ -18,7 +18,7 @@ On the client, a single baseline object is initialized and attached to the `wind
 
 ```javascript
 window.Wikkem.baseline = new Baseline( {
-	rt : new RouteService(),
+	rt : new ContactsService(),
 } );
 ```
 
@@ -44,5 +44,15 @@ The process of bootstrapping data from the client to the server is streamlined u
 
 ![](https://github.com/rotundasoftware/baselinejs/blob/master/docs/bootstrapping.png)
 
+To 
 
+```javascript
+app.use( function( req, res, cb ) {
+	req.baseline = new Baseline( {
+		rt : new ContactsService( { collectionName : 'contacts' } )
+	} );
 
+	req.bootstrapBoat = req.baseline.createBoat();
+	steamer.stuffMiddleware( 'bootstrapBoat' )( req, res, cb );
+} );
+```

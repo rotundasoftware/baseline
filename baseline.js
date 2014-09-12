@@ -1,6 +1,6 @@
-var _ = require( "underscore" );
-var Class = require( "class-con-leche" );
-var steamer = require( "steamer" );
+var _ = require( 'underscore' );
+var Class = require( 'class-con-leche' );
+var steamer = require( 'steamer' );
 
 module.exports = Class.extend( {
 	initialize : function( services ) {
@@ -56,19 +56,19 @@ module.exports = Class.extend( {
 		}
 		else {
 			// on the client side we have to do a remote sync request via our sync url. 
-			if( ! this._syncUrl ) return callback( new Error( "Attempt to sync but no syncUrl has been supplied." ) );
+			if( ! this._syncUrl ) return callback( new Error( 'Attempt to sync but no syncUrl has been supplied.' ) );
 
 			return $.ajax( {
 				url : this._syncUrl,
-				contentType : "application/json",
-				type : "POST",
+				contentType : 'application/json',
+				type : 'POST',
 				data : JSON.stringify( manifest ),
-				dataType : "json",
+				dataType : 'json',
 				success : function( boatContents ) {
 					onGotResults( null, boatContents );
 				},
 				error : function( errorObj, error ) {
-					callback( new Error( "Baseline sync failed: " + errorObj.responseText ) );
+					callback( new Error( 'Baseline sync failed: ' + errorObj.responseText ) );
 				}
 			} );
 		}
@@ -89,13 +89,13 @@ module.exports = Class.extend( {
 		var _this = this;
 		
 		if( obj.dependencies ) {
-			var dependencies = _.result( obj, "dependencies" );
-			if( ! _.isArray( dependencies ) ) throw new Error( "`dependencies` property must be an array of service identifiers." );
+			var dependencies = _.result( obj, 'dependencies' );
+			if( ! _.isArray( dependencies ) ) throw new Error( '`dependencies` property must be an array of service identifiers.' );
 
 			_.each( dependencies, function( thisDependency ) {
 				var thisDependencyService = _this.services[ thisDependency ];
 				if( _.isUndefined( thisDependencyService ) )
-					throw new Error( "The service \"" + thisDependency + "\" is not available on this page." );
+					throw new Error( 'The service \'' + thisDependency + '\' is not available on this page.' );
 
 				obj[ thisDependency ] = thisDependencyService;
 			} );
@@ -104,5 +104,5 @@ module.exports = Class.extend( {
 } );
 
 function _isServer() {
-	return( typeof window === "undefined" );
+	return( typeof window === 'undefined' );
 }

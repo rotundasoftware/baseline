@@ -1,6 +1,6 @@
 var Class = require( 'class-con-leche' );
 
-var CollectionService = module.exports = Class.extend( {
+module.exports = Class.extend( {
 	initialize : function() {
 
 	},
@@ -15,5 +15,9 @@ var CollectionService = module.exports = Class.extend( {
 	},
 
 	merge : function( data ) {
+	},
+
+	_isServer : function() {
+		return( typeof window === 'undefined' );
 	}
 } );
