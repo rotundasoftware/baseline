@@ -19,20 +19,6 @@ module.exports = Class.extend( {
 		} );
 	},
 
-	createBoat : function( manifest ) {
-		var containers = {};
-
-		_.each( this.services, function( thisService, thisServiceIdent ) {
-			containers[ thisServiceIdent ] = thisService.createContainer();
-		} );
-
-		var boat = new steamer.Boat( containers );
-
-		if( manifest ) boat.add( manifest );
-
-		return boat;
-	},
-
 	fetch : function( manifest, callback ) {
 		var _this = this;
 

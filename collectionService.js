@@ -30,12 +30,6 @@ var CollectionService = module.exports = BaseService.extend( {
 		BaseService.prototype.initialize( options );
 	},
 
-	createContainer : function() {
-		return new steamer.MongoCollectionContainer( {
-			collection : this.collectionName
-		} );
-	},
-
 	create : function( initialFieldValues, options ) {
 		options = _.defaults( {}, options, { silent : false } );
 
@@ -60,10 +54,10 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	get : function( recordId, fieldName ) {
-		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
+		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in collection \'' + this.collectionName + '\'.' );
 
 		var fieldValue = this._recordsById[ recordId ][ fieldName ];
-		if( _.isUndefined( fieldValue ) ) throw new Error( 'Field \'' + fieldName + '\' is not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
+		if( _.isUndefined( fieldValue ) ) throw new Error( 'Field \'' + fieldName + '\' is not present for record id ' + recordId + ' in collection \'' + this.collectionName + '\'.' );
 
 		return this._copyFieldValue( fieldValue );
 	},
@@ -71,7 +65,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	gets : function( recordId, fields ) {
 		var _this = this;
 
-		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
+		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in collection \'' + this.collectionName + '\'.' );
 
 		if( _.isUndefined( fields ) ) fields = _.keys( this._recordsById[ recordId ] );
 
@@ -97,14 +91,14 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	rawSet : function( recordId, fieldName, fieldValue ) {
-		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
+		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in collection \'' + this.collectionName + '\'.' );
 		
 		if( fieldName === this._idFieldName ) throw new Error( 'Changing the id field of an existing record is not supported.' );
 		
 		// not sure we want to check if the data exists before setting it.. for example, we create a new record, and then want to fill
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
 		// but jury is still out, so we will do it this way for now.
-		//if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
+		//if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in collection \'' + this.collectionName + '\'.' );
 		this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
 
 		var params = {
@@ -252,7 +246,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	}
 } );
 
-// Underscore methods that we want to implement for each table.
+// Underscore methods that we want to implement for each collection.
 var underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
 	'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
 	'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
