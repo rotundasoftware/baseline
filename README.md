@@ -57,4 +57,4 @@ app.use( function( req, res, cb ) {
 } );
 ```
 
-THIS DOCUMENTATION IS A WORK IN PROGRESS. If you want to see this project flushed out more, please star the repo.
+THIS DOCUMENTATION IS A WORK IN PROGRESS. If you want to see more, please star the repo.
