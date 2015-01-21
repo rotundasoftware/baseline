@@ -3,10 +3,7 @@ var BaseService = require( './baseService' );
 var steamer = require( 'steamer' );
 var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
-
-var mMachineId = parseInt( Math.random() * 0xFFFFFF, 10 );
-var mProcessId = typeof( process ) === 'object' && typeof( process.pid ) === 'number' ? process.pid : Math.floor( Math.random() * 32767 );
-var mUniqueIdIncrement = 0;
+var Backbone = require( 'backbone' );
 
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
@@ -22,6 +19,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		//this._fieldNames = this.fieldNames;
 		this._recordIds = [];
 		this._recordsById = {};
+		this._newRecordIds = [];
 
 		this._idFieldName = options.idFieldName;
 
@@ -55,6 +53,8 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		this.trigger( 'operation', 'createRecord', params );
 		this.trigger( 'create', initialFieldValues, options );
+
+		this._newRecordIds.push( this._idFieldName );
 
 		return initialFieldValues[ this._idFieldName ];
 	},
@@ -171,7 +171,6 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	sort : function() {
-		var _this = this;
 		if( ! this.comparator )
 			throw new Error( 'Cannot sort without a comparator' );
 		
@@ -212,6 +211,37 @@ var CollectionService = module.exports = BaseService.extend( {
 		}, this );
 	},
 
+	save : function( recordId, options ) {
+		var _this = this;
+
+		options = _.defaults( {}, options, {
+			success : undefined,
+			error : undefined,
+			merge : true
+		} );
+
+		var method = _.contains( this._newRecordIds, recordId ) ? 'create' : 'update';
+
+		var dto = this._recordToDTO( recordId, method );
+
+		// dependency on backbone. we can get rid of this if / when this API stabilizes
+		var model = new Backbone.Model( dto );
+		model.isNew = function() { return method === 'create'; };
+		model.url = function() { return _this._getRESTEndpoint( recordId, method ); };
+
+		model.save( {}, {
+			success : function( model, response ) {
+				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
+
+				if( options.merge ) _this._mergeDTO( model, method );
+				if( options.success ) options.success( response, model.toJSON() );
+			},
+			error : function( model, response ) {
+				if( options.error ) options.error( response, model.toJSON() );
+			}
+		} );
+	},
+
 	// Return records with matching attributes. Useful for simple cases of
 	// `filter`.
 	where : function( attrs, first ) {
@@ -249,6 +279,23 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	_getUniqueId : function() {
 		return uuid.v4();
+	},
+
+	_getRESTEndpoint : function( recordId, method ) {
+		var base = _.result( this, 'url' );
+		if( ! base ) throw new Error( 'A "url" property or function must be specified' );
+
+		if( method == 'create' ) return base;
+
+		return base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
+	},
+
+	_recordToDTO : function( recordId, method ) {
+		return this.gets( recordId );
+	},
+
+	_mergeDTO : function( dto, method ) {
+		return;
 	}
 } );
 
