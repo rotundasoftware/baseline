@@ -39,8 +39,10 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		if( ! initialFieldValues ) initialFieldValues = {};
 
-		if( ! initialFieldValues[ this._idFieldName ] )
-			initialFieldValues[ this._idFieldName ] = this._getUniqueId();
+		var newRecordId = initialFieldValues[ this._idFieldName ];
+
+		if( ! newRecordId )
+			initialFieldValues[ this._idFieldName ] = newRecordId = this._getUniqueId();
 
 		_.defaults( initialFieldValues, this.fields );
 
@@ -54,9 +56,9 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.trigger( 'operation', 'createRecord', params );
 		this.trigger( 'create', initialFieldValues, options );
 
-		this._newRecordIds.push( this._idFieldName );
+		this._newRecordIds.push( newRecordId );
 
-		return initialFieldValues[ this._idFieldName ];
+		return newRecordId;
 	},
 
 	get : function( recordId, fieldName ) {
