@@ -8,10 +8,13 @@
   },
   "author": "Rotunda Software",
   "dependencies": {
-    "underscore": "~1.6.0",
+    "backbone": "~1.1.2",
+    "backbone-events-standalone": "^0.2.1",
     "class-con-leche": "~0.0.0",
+    "jquery": "^2.1.4",
+    "node-uuid": "1.4.1",
     "steamer": "~0.2.0",
-    "backbone-events-standalone": "^0.2.1"
+    "underscore": "^1.8.0"
   },
   "license": "MIT"
 }

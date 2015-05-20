@@ -3,7 +3,7 @@ var BaseService = require( './baseService' );
 var steamer = require( 'steamer' );
 var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
-var Backbone = require( 'backbone' );
+var $ = require( 'jquery' );
 
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
@@ -57,6 +57,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.trigger( 'create', initialFieldValues, options );
 
 		this._newRecordIds.push( newRecordId );
+
+		if( ! _.isUndefined( this.comparator ) ) {
+			this.sort();
+		}
 
 		return newRecordId;
 	},
@@ -118,22 +122,41 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		this.trigger( 'operation', 'setField', params );
 		this.trigger( 'set', recordId, fieldName, fieldValue );
+		this.trigger( 'set:' + recordId, fieldName, fieldValue );
 	},
 
-	destroy : function( recordId ) {
-		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
-	
-		this._recordIds = _.without( this._recordIds, recordId );
-		delete this._recordsById[ recordId ];
-		this.length--;
+	destroy : function( recordIdOrIds ) {
+		var _this = this;
+		var recordIds;
 
-		var params = {
-			collectionName : this.collectionName,
-			recordId : recordId
-		};
+		if( ! _.isArray( recordIdOrIds ) ) {
+			var recordId = recordIdOrIds;
 
-		this.trigger( 'operation', 'destroyRecord', params );
-		this.trigger( 'destroy', recordId );
+			var url = this._getRESTEndpoint( 'delete', recordId );
+			this._sync( url, 'delete' );
+			recordIds = [ recordId ];
+		} else {
+			recordIds = recordIdOrIds;
+
+			var url = this._getRESTEndpoint( 'delete', recordIds );
+			this._sync( url, 'delete', recordIds );
+		}
+
+		_.each( recordIds, function( thisRecordId ) {
+			if( ! _this._recordsById[ thisRecordId ] ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+		
+			_this._recordIds = _.without( _this._recordIds, thisRecordId );
+			delete _this._recordsById[ thisRecordId ];
+			_this.length--;
+
+			var params = {
+				collectionName : _this.collectionName,
+				recordId : thisRecordId
+			};
+
+			_this.trigger( 'operation', 'destroyRecord', params );
+			_this.trigger( 'destroy', thisRecordId );
+		} );
 	},
 
 	ids : function() {
@@ -182,22 +205,11 @@ var CollectionService = module.exports = BaseService.extend( {
 			this._recordIds.sort( _.bind( this.comparator, this ) );
 	},
 
-	merge : function( newRecords, options ) {
-		_.each( newRecords, function( thisRecord ) {
-			var recordId = thisRecord[ this._idFieldName ];
+	merge : function( newRecordDTOs ) {
+		var _this = this;
 
-			if( _.isUndefined( recordId ) )
-				throw new Error( 'Each record must define a unique id.' );
-
-			// make sure the attributes we end up storing are copies, in case
-			// somebody is using the original newRecords.
-			var copiedRecord = this._copyRecord( thisRecord );
-
-			if( ! this._recordsById[ recordId ] ) this._recordsById[ recordId ] = {};
-			_.defaults( this._recordsById[ recordId ], copiedRecord );
-
-			this._recordIds.push( recordId );
-			this.length++;
+		_.each( newRecordDTOs, function( thisDto ) {
+			_this._mergeDTO( thisDto, 'get', { sort : false } );
 		}, this );
 
 		if( ! _.isUndefined( this.comparator ) ) {
@@ -205,12 +217,21 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
-	toJSON : function( recordIds ) {
-		if( _.isUndefined( recordIds ) ) recordIds = this._recordIds;
+	toJSON : function( options ) {
+		options = _.defaults( {}, options, {
+			recordIds : this._recordIds,
+			fields : null
+		} );
 
-		return _.map( recordIds, function( thisRecordId ) {
-			return this._copyRecord( this._recordsById[ thisRecordId ] );
-		}, this );
+		if( options.fields ) {
+			return _.map( options.recordIds, function( thisRecordId ) {
+				return this._copyRecord( _.pick( this._recordsById[ thisRecordId ], options.fields ) );
+			}, this );
+		} else {
+			return _.map( options.recordIds, function( thisRecordId ) {
+				return this._copyRecord( this._recordsById[ thisRecordId ] );
+			}, this );
+		}
 	},
 
 	save : function( recordId, options ) {
@@ -222,24 +243,20 @@ var CollectionService = module.exports = BaseService.extend( {
 			merge : true
 		} );
 
-		var method = _.contains( this._newRecordIds, recordId ) ? 'create' : 'update';
-
+		var isNew = _.contains( this._newRecordIds, recordId );
+		var method = isNew ? 'create' : 'update';
+		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
-		// dependency on backbone. we can get rid of this if / when this API stabilizes
-		var model = new Backbone.Model( dto );
-		model.isNew = function() { return method === 'create'; };
-		model.url = function() { return _this._getRESTEndpoint( recordId, method ); };
-
-		model.save( {}, {
-			success : function( model, response ) {
+		this._sync( url, method, dto, {
+			success : function( returnedJson ) {
 				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 
-				if( options.merge ) _this._mergeDTO( model, method );
-				if( options.success ) options.success( response, model.toJSON() );
+				if( options.merge ) _this._mergeDTO( returnedJson, method );
+				if( options.success ) options.success.apply( this, arguments );
 			},
-			error : function( model, response ) {
-				if( options.error ) options.error( response, model.toJSON() );
+			error : function() {
+				if( options.error ) options.error.apply( this, arguments );
 			}
 		} );
 	},
@@ -283,21 +300,72 @@ var CollectionService = module.exports = BaseService.extend( {
 		return uuid.v4();
 	},
 
-	_getRESTEndpoint : function( recordId, method ) {
-		var base = _.result( this, 'url' );
+	_getRESTEndpoint : function( method, recordIdOrIds ) {
+		var base = this.url;
+		if( _.isFunction( base ) ) base = base.call( this );
+
 		if( ! base ) throw new Error( 'A "url" property or function must be specified' );
 
-		if( method == 'create' ) return base;
+		if( method == 'create' || _.isArray( recordIdOrIds ) ) return base;
 
-		return base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
+		return base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordIdOrIds );
 	},
 
 	_recordToDTO : function( recordId, method ) {
-		return this.gets( recordId );
+		var dto = this.gets( recordId );
+		if( method === 'update' ) delete dto.id;
+		return dto;
 	},
 
-	_mergeDTO : function( dto, method ) {
-		return;
+	_mergeDTO : function( dto, method, options ) {
+		var options = _.defaults( {}, options, {
+			sort : true
+		} );
+
+		var recordId = dto[ this._idFieldName ];
+
+		if( _.isUndefined( recordId ) )
+			throw new Error( 'Each dto must define a unique id.' );
+
+		// make sure the attributes we end up storing are copies, in case
+		// somebody is using the original newRecordDTOs.
+		var recordIsNew = ! this._recordsById[ recordId ];
+		if( recordIsNew ) {
+			this._recordsById[ recordId ] = {};
+			this._recordIds.push( recordId );
+			this.length++;
+		}
+
+		_.defaults( this._recordsById[ recordId ], dto );
+
+		if( options.sort && ! _.isUndefined( this.comparator ) ) {
+			this.sort();
+		}
+	},
+
+	_sync : function( url, method, payload, options ) {
+		var options = _.defaults( {}, options );
+
+		var methodMap = {
+			'create' : 'POST',
+			'update' : 'PUT',
+			'patch' :  'PATCH',
+			'delete' : 'DELETE',
+			'read' :   'GET'
+		};
+
+		// Default JSON-request options.
+		var params = {
+			url : url,
+			type : methodMap[ method ],
+			dataType : 'json',
+			contentType : 'application/json',
+			data : JSON.stringify( payload )
+		};
+
+		// Make the request, allowing the user to override any Ajax options.
+		var xhr = options.xhr = $.ajax( _.extend( params, options ) );
+		return xhr;
 	}
 } );
 
