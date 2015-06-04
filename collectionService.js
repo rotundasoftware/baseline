@@ -92,8 +92,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	set : function( recordId, fieldName, fieldValue ) {
-		if( _.isArray( fieldName ) ) this.setMultiple( recordId, fieldName ); // uuu, why do we have sets & setMultiple if we are doing this? also shouldn't this be if _.isObject()?
-		else this.rawSet.apply( this, arguments );
+		this.rawSet.apply( this, arguments );
 	},
 
 	sets : function( recordId, fields ) {
@@ -109,7 +108,8 @@ var CollectionService = module.exports = BaseService.extend( {
 		
 		// not sure we want to check if the data exists before setting it.. for example, we create a new record, and then want to fill
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
-		// but jury is still out, so we will do it this way for now.
+		// but jury is still out, so we will do it this way for now. nevermind, don't like this, let's keep things explicit. only way
+		// to add a column is through merge, or 
 		//if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 		this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
 
