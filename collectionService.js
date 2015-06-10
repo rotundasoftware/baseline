@@ -301,14 +301,21 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	_getRESTEndpoint : function( method, recordIdOrIds ) {
+		var _this = this;
+
 		var base = this.url;
 		if( _.isFunction( base ) ) base = base.call( this );
 
 		if( ! base ) throw new Error( 'A "url" property or function must be specified' );
-
 		if( method == 'create' || _.isArray( recordIdOrIds ) ) return base;
 
-		return base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordIdOrIds );
+		var recordId = recordIdOrIds;
+		var endpoint = base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
+		endpoint = endpoint.replace( /\/:(\w+)/g, function( match, fieldName ) {
+			return '/' + _this.get( recordId, fieldName );
+		} );
+
+		return endpoint;
 	},
 
 	_recordToDTO : function( recordId, method ) {
