@@ -8,15 +8,15 @@ var $ = require( 'jquery' );
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
 		options = _.defaults( {}, options, {
-			idFieldName : "id"
+			idFieldName : 'id'
 		} );
 
 		if( _.isUndefined( this.collectionName ) ) throw new Error( 'The collectionName attribute must be defined on collection service instances.' );
-		//if( _.isUndefined( this.fieldNames ) ) throw new Error( 'The fieldNames attribute must be defined on data service instances.' );
+		// if( _.isUndefined( this.fieldNames ) ) throw new Error( 'The fieldNames attribute must be defined on data service instances.' );
 
 		this.length = 0;
 		
-		//this._fieldNames = this.fieldNames;
+		// this._fieldNames = this.fieldNames;
 		this._recordIds = [];
 		this._recordsById = {};
 		this._newRecordIds = [];
@@ -109,8 +109,8 @@ var CollectionService = module.exports = BaseService.extend( {
 		// not sure we want to check if the data exists before setting it.. for example, we create a new record, and then want to fill
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
 		// but jury is still out, so we will do it this way for now. nevermind, don't like this, let's keep things explicit. only way
-		// to add a column is through merge, or 
-		//if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
+		// to add a column is through merge, or
+		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 		this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
 
 		var params = {
@@ -248,16 +248,21 @@ var CollectionService = module.exports = BaseService.extend( {
 		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
-		this._sync( url, method, dto, {
-			success : function( returnedJson ) {
-				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
+		return new Promise( function( resolve, reject ) {
+			_this._sync( url, method, dto, {
+				success : function( returnedJson ) {
+					if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 
-				if( options.merge ) _this._mergeDTO( returnedJson, method );
-				if( options.success ) options.success.apply( this, arguments );
-			},
-			error : function() {
-				if( options.error ) options.error.apply( this, arguments );
-			}
+					if( options.merge ) _this._mergeDTO( returnedJson, method );
+					if( options.success ) options.success.apply( this, arguments );
+
+					resolve( returnedJson );
+				},
+				error : function() {
+					if( options.error ) options.error.apply( this, arguments );
+					reject.apply( this, arguments );
+				}
+			} );
 		} );
 	},
 
