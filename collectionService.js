@@ -234,6 +234,32 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
+	fetch : function( recordId, options ) {
+		var _this = this;
+
+		options = _.defaults( {}, options, {
+			success : undefined,
+			error : undefined
+		} );
+
+		var url = this._getRESTEndpoint( 'get', recordId );
+
+		return new Promise( function( resolve, reject ) {
+			_this._sync( url, 'get', null, {
+				success : function( returnedJson ) {
+					_this._mergeDTO( returnedJson, 'get' );
+					if( options.success ) options.success.apply( this, arguments );
+
+					resolve( returnedJson );
+				},
+				error : function() {
+					if( options.error ) options.error.apply( this, arguments );
+					reject.apply( this, arguments );
+				}
+			} );
+		} );
+	},
+
 	save : function( recordId, options ) {
 		var _this = this;
 
@@ -363,7 +389,7 @@ var CollectionService = module.exports = BaseService.extend( {
 			'update' : 'PUT',
 			'patch' :  'PATCH',
 			'delete' : 'DELETE',
-			'read' :   'GET'
+			'get' :   'GET'
 		};
 
 		// Default JSON-request options.
@@ -372,7 +398,7 @@ var CollectionService = module.exports = BaseService.extend( {
 			type : methodMap[ method ],
 			dataType : 'json',
 			contentType : 'application/json',
-			data : JSON.stringify( payload )
+			data : method === 'get' ? undefined : JSON.stringify( payload )
 		};
 
 		// Make the request, allowing the user to override any Ajax options.
