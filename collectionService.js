@@ -250,11 +250,11 @@ var CollectionService = module.exports = BaseService.extend( {
 					_this._mergeDTO( returnedJson, 'get' );
 					if( options.success ) options.success.apply( this, arguments );
 
-					resolve( returnedJson );
+					resolve( true, returnedJson );
 				},
-				error : function() {
+				error : function( xhr ) {
 					if( options.error ) options.error.apply( this, arguments );
-					reject.apply( this, arguments );
+					resolve( false, xhr );
 				}
 			} );
 		} );
@@ -282,11 +282,11 @@ var CollectionService = module.exports = BaseService.extend( {
 					if( options.merge ) _this._mergeDTO( returnedJson, method );
 					if( options.success ) options.success.apply( this, arguments );
 
-					resolve( returnedJson );
+					resolve( true, returnedJson );
 				},
-				error : function() {
+				error : function( xhr ) {
 					if( options.error ) options.error.apply( this, arguments );
-					reject.apply( this, arguments );
+					resolve( false, xhr );
 				}
 			} );
 		} );
@@ -338,13 +338,17 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( _.isFunction( base ) ) base = base.call( this );
 
 		if( ! base ) throw new Error( 'A "url" property or function must be specified' );
-		if( method == 'create' || _.isArray( recordIdOrIds ) ) return base;
+
+		var endpoint = base;
 
 		var recordId = recordIdOrIds;
-		var endpoint = base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
 		endpoint = endpoint.replace( /\/:(\w+)/g, function( match, fieldName ) {
 			return '/' + _this.get( recordId, fieldName );
 		} );
+
+		if( method != 'create' && ! _.isArray( recordIdOrIds ) ) {
+			endpoint = base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
+		}
 
 		return endpoint;
 	},
@@ -381,7 +385,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
-	_sync : function( url, method, payload, options ) {
+	_sync : function( url, method, payload, ajaxOptions ) {
 		var options = _.defaults( {}, options );
 
 		var methodMap = {
@@ -402,7 +406,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		};
 
 		// Make the request, allowing the user to override any Ajax options.
-		var xhr = options.xhr = $.ajax( _.extend( params, options ) );
+		var xhr = $.ajax( _.extend( params, ajaxOptions ) );
 		return xhr;
 	}
 } );
