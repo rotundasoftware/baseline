@@ -356,7 +356,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		} );
 
 		if( method != 'create' && ! _.isArray( recordIdOrIds ) ) {
-			endpoint = base.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
+			endpoint = endpoint.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
 		}
 
 		return endpoint;
