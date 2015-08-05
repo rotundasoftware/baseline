@@ -125,21 +125,27 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.trigger( 'set:' + recordId, fieldName, fieldValue );
 	},
 
-	destroy : function( recordIdOrIds ) {
+	destroy : function( recordIdOrIds, options ) {
 		var _this = this;
 		var recordIds;
 
-		if( ! _.isArray( recordIdOrIds ) ) {
-			var recordId = recordIdOrIds;
+		options = _.defaults( {}. options, {
+			sync : true
+		} );
 
-			var url = this._getRESTEndpoint( 'delete', recordId );
-			this._sync( url, 'delete' );
-			recordIds = [ recordId ];
-		} else {
-			recordIds = recordIdOrIds;
+		if( options.sync ) {
+			if( ! _.isArray( recordIdOrIds ) ) {
+				var recordId = recordIdOrIds;
 
-			var url = this._getRESTEndpoint( 'delete', recordIds );
-			this._sync( url, 'delete', recordIds );
+				var url = this._getRESTEndpoint( 'delete', recordId );
+				this._sync( url, 'delete' );
+				recordIds = [ recordId ];
+			} else {
+				recordIds = recordIdOrIds;
+
+				var url = this._getRESTEndpoint( 'delete', recordIds );
+				this._sync( url, 'delete', recordIds );
+			}
 		}
 
 		_.each( recordIds, function( thisRecordId ) {
