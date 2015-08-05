@@ -133,16 +133,19 @@ var CollectionService = module.exports = BaseService.extend( {
 			sync : true
 		} );
 
-		if( options.sync ) {
-			if( ! _.isArray( recordIdOrIds ) ) {
-				var recordId = recordIdOrIds;
+		if( ! _.isArray( recordIdOrIds ) ) {
+			var recordId = recordIdOrIds;
 
+			if( options.sync ) {
 				var url = this._getRESTEndpoint( 'delete', recordId );
 				this._sync( url, 'delete' );
-				recordIds = [ recordId ];
-			} else {
-				recordIds = recordIdOrIds;
+			}
 
+			recordIds = [ recordId ];
+		} else {
+			recordIds = recordIdOrIds;
+
+			if( options.sync ) {
 				var url = this._getRESTEndpoint( 'delete', recordIds );
 				this._sync( url, 'delete', recordIds );
 			}
