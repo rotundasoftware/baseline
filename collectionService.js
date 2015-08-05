@@ -129,7 +129,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 		var recordIds;
 
-		options = _.defaults( {}. options, {
+		options = _.defaults( {}, options, {
 			sync : true
 		} );
 
