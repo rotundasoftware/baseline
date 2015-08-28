@@ -104,7 +104,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	rawSet : function( recordId, fieldName, fieldValue ) {
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 		
-		if( fieldName === this._idFieldName ) throw new Error( 'Changing the id field of an existing record is not supported.' );
+		if( fieldName === this._idFieldName && this._recordsById[ recordId ][ fieldName ] !== fieldValue ) throw new Error( 'Changing the id field of an existing record is not supported.' );
 		
 		// not sure we want to check if the data exists before setting it.. for example, we create a new record, and then want to fill
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
