@@ -349,17 +349,22 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( ! base ) throw new Error( 'A "url" property or function must be specified' );
 
 		var endpoint = base;
-
 		var recordId = recordIdOrIds;
-		endpoint = endpoint.replace( /\/:(\w+)/g, function( match, fieldName ) {
-			return '/' + _this.get( recordId, fieldName );
-		} );
+		endpoint = this._fillInVariablePartsOfRESTEndpoint( recordId, endpoint );
 
 		if( method != 'create' && ! _.isArray( recordIdOrIds ) ) {
 			endpoint = endpoint.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
 		}
 
 		return endpoint;
+	},
+
+	_fillInVariablePartsOfRESTEndpoint : function( recordId, endpoint ) {
+		var _this = this;
+	
+		return endpoint.replace( /\/:(\w+)/g, function( match, fieldName ) {
+			return '/' + _this.get( recordId, fieldName );
+		} );
 	},
 
 	_recordToDTO : function( recordId, method ) {
