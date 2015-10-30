@@ -227,6 +227,8 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	toJSON : function( options ) {
+		var _this = this;
+
 		options = _.defaults( {}, options, {
 			recordIds : this._recordIds,
 			fields : null
@@ -234,10 +236,14 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		if( options.fields ) {
 			return _.map( options.recordIds, function( thisRecordId ) {
+				if( ! _this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+			
 				return this._copyRecord( _.pick( this._recordsById[ thisRecordId ], options.fields ) );
 			}, this );
 		} else {
 			return _.map( options.recordIds, function( thisRecordId ) {
+				if( ! _this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+		
 				return this._copyRecord( this._recordsById[ thisRecordId ] );
 			}, this );
 		}
