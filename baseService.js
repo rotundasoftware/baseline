@@ -11,9 +11,6 @@ module.exports = Class.extend( {
 		this[ name ] = serviceInstance;
 	},
 
-	createContainer : function() {
-	},
-
 	merge : function( data ) {
 	},
 

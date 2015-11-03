@@ -1,6 +1,5 @@
 var _ = require( 'underscore' );
 var BaseService = require( './baseService' );
-var steamer = require( 'steamer' );
 var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
 var $ = require( 'jquery' );
@@ -8,7 +7,8 @@ var $ = require( 'jquery' );
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
 		options = _.defaults( {}, options, {
-			idFieldName : 'id'
+			idFieldName : 'id',
+			defaultAjaxErrorHandler : undefined
 		} );
 
 		if( _.isUndefined( this.collectionName ) ) throw new Error( 'The collectionName attribute must be defined on collection service instances.' );
@@ -22,16 +22,11 @@ var CollectionService = module.exports = BaseService.extend( {
 		this._newRecordIds = [];
 
 		this._idFieldName = options.idFieldName;
+		this._defaultAjaxErrorHandler = options.defaultAjaxErrorHandler;
 
 		Events.mixin( this );
 
 		BaseService.prototype.initialize( options );
-	},
-
-	createContainer : function() {
-		return new steamer.MongoCollectionContainer( {
-			collection : this.collectionName
-		} );
 	},
 
 	create : function( initialFieldValues, options ) {
@@ -269,6 +264,8 @@ var CollectionService = module.exports = BaseService.extend( {
 				},
 				error : function( xhr ) {
 					if( options.error ) options.error.apply( this, arguments );
+					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
+
 					resolve( false, xhr );
 				}
 			} );
@@ -301,6 +298,8 @@ var CollectionService = module.exports = BaseService.extend( {
 				},
 				error : function( xhr ) {
 					if( options.error ) options.error.apply( this, arguments );
+					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
+
 					resolve( false, xhr );
 				}
 			} );

@@ -1,6 +1,5 @@
 var _ = require( 'underscore' );
 var Class = require( 'class-con-leche' );
-var steamer = require( 'steamer' );
 
 module.exports = Class.extend( {
 	initialize : function( services ) {
@@ -18,21 +17,7 @@ module.exports = Class.extend( {
 			} );
 		} );
 	},
-
-	createBoat : function( manifest ) {
-		var containers = {};
-
-		_.each( this.services, function( thisService, thisServiceIdent ) {
-			containers[ thisServiceIdent ] = thisService.createContainer();
-		} );
-
-		var boat = new steamer.Boat( containers );
-
-		if( manifest ) boat.add( manifest );
-
-		return boat;
-	},
-
+	
 	fetch : function( manifest, callback ) {
 		var _this = this;
 
