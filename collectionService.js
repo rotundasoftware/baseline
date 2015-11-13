@@ -106,7 +106,9 @@ var CollectionService = module.exports = BaseService.extend( {
 		// but jury is still out, so we will do it this way for now. nevermind, don't like this, let's keep things explicit. only way
 		// to add a column is through merge, or
 		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
-		this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
+
+		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
+		else this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
 
 		var params = {
 			collectionName : this.collectionName,
