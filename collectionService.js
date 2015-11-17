@@ -258,17 +258,17 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		return new Promise( function( resolve, reject ) {
 			_this._sync( url, 'get', null, {
-				success : function( returnedJson ) {
+				success : function( returnedJson, textStatus, xhr ) {
 					_this._mergeDTO( returnedJson, 'get' );
 					if( options.success ) options.success.apply( this, arguments );
 
-					resolve( true, returnedJson );
+					resolve( { success : true, xhr : xhr } );
 				},
 				error : function( xhr ) {
 					if( options.error ) options.error.apply( this, arguments );
 					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
 
-					resolve( false, xhr );
+					resolve( false ); // this should really return { success : false, xhr : xhr }, but big breaking change
 				}
 			} );
 		} );
@@ -290,19 +290,19 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		return new Promise( function( resolve, reject ) {
 			_this._sync( url, method, dto, {
-				success : function( returnedJson ) {
+				success : function( returnedJson, textStatus, xhr ) {
 					if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 
 					if( options.merge ) _this._mergeDTO( returnedJson, method );
 					if( options.success ) options.success.apply( this, arguments );
 
-					resolve( true, returnedJson );
+					resolve( { success : true, xhr : xhr } );
 				},
 				error : function( xhr ) {
 					if( options.error ) options.error.apply( this, arguments );
 					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
 
-					resolve( false, xhr );
+					resolve( false ); // this should really return { success : false, xhr : xhr }, but big breaking change
 				}
 			} );
 		} );
