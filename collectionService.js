@@ -268,7 +268,7 @@ var CollectionService = module.exports = BaseService.extend( {
 					if( options.error ) options.error.apply( this, arguments );
 					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
 
-					resolve( false ); // this should really return { success : false, xhr : xhr }, but big breaking change
+					resolve( { success : false, xhr : xhr } );
 				}
 			} );
 		} );
@@ -302,7 +302,7 @@ var CollectionService = module.exports = BaseService.extend( {
 					if( options.error ) options.error.apply( this, arguments );
 					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
 
-					resolve( false ); // this should really return { success : false, xhr : xhr }, but big breaking change
+					resolve( { success : false, xhr : xhr } );
 				}
 			} );
 		} );
