@@ -124,45 +124,51 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	destroy : function( recordIdOrIds, options ) {
 		var _this = this;
-		var recordIds;
 
 		options = _.defaults( {}, options, {
-			sync : true
+			sync : true,
+			success : null,
+			error : null
 		} );
 
-		if( ! _.isArray( recordIdOrIds ) ) {
-			var recordId = recordIdOrIds;
+		var deleteLocally = function() {
+			_.each( _.isArray( recordIdOrIds ) ? recordIdOrIds : [ recordIdOrIds ], function( thisRecordId ) {
+				if( ! _this._recordsById[ thisRecordId ] ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+			
+				_this._recordIds = _.without( _this._recordIds, thisRecordId );
+				delete _this._recordsById[ thisRecordId ];
+				_this.length--;
 
-			if( options.sync ) {
-				var url = this._getRESTEndpoint( 'delete', recordId );
-				this._sync( url, 'delete' );
-			}
+				var params = {
+					collectionName : _this.collectionName,
+					recordId : thisRecordId
+				};
 
-			recordIds = [ recordId ];
-		} else {
-			recordIds = recordIdOrIds;
-
-			if( options.sync ) {
-				var url = this._getRESTEndpoint( 'delete', recordIds );
-				this._sync( url, 'delete', recordIds );
-			}
+				_this.trigger( 'operation', 'destroyRecord', params );
+				_this.trigger( 'destroy', thisRecordId );
+			} );
 		}
 
-		_.each( recordIds, function( thisRecordId ) {
-			if( ! _this._recordsById[ thisRecordId ] ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
-		
-			_this._recordIds = _.without( _this._recordIds, thisRecordId );
-			delete _this._recordsById[ thisRecordId ];
-			_this.length--;
+		if( options.sync ) {
+			var url = this._getRESTEndpoint( 'delete', recordIdOrIds );
 
-			var params = {
-				collectionName : _this.collectionName,
-				recordId : thisRecordId
-			};
+			return new Promise( function( resolve, reject ) {
+				_this._sync( url, 'delete', _.isArray( recordIdOrIds ) ? recordIdOrIds : undefined, {
+					success : function( returnedJson, textStatus, xhr ) {
+						if( options.success ) options.success.apply( this, arguments );
 
-			_this.trigger( 'operation', 'destroyRecord', params );
-			_this.trigger( 'destroy', thisRecordId );
-		} );
+						deleteLocally();
+
+						resolve( { success : true, xhr : xhr } );
+					},
+					error : function( xhr ) {
+						if( options.error ) options.error.apply( this, arguments );
+						else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
+						resolve( { success : false, xhr : xhr } );
+					}
+				} );
+			} );
+		} else deleteLocally();
 	},
 
 	ids : function() {
