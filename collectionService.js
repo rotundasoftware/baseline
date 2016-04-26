@@ -53,9 +53,9 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		this._newRecordIds.push( newRecordId );
 
-		if( ! _.isUndefined( this.comparator ) ) {
-			this.sort();
-		}
+		// if( ! _.isUndefined( this.comparator ) ) {
+		// 	this.sort();
+		// }
 
 		return newRecordId;
 	},
@@ -149,11 +149,18 @@ var CollectionService = module.exports = BaseService.extend( {
 			} );
 		}
 
+		var recordIdsToDeleteRemotely = [];
 		if( options.sync ) {
-			var url = this._getRESTEndpoint( 'delete', recordIdOrIds );
+			recordIdsToDeleteRemotely = _.filter( _.isArray( recordIdOrIds ) ? recordIdOrIds : [ recordIdOrIds ], function( thisRecordId ) {
+				return ! _this.isNew( thisRecordId );
+			} );
+		}
+
+		if( recordIdsToDeleteRemotely.length > 0 ) {
+			var url = this._getRESTEndpoint( 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : recordIdsToDeleteRemotely[0] );
 
 			return new Promise( function( resolve, reject ) {
-				_this._sync( url, 'delete', _.isArray( recordIdOrIds ) ? recordIdOrIds : undefined, {
+				_this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined, {
 					success : function( returnedJson, textStatus, xhr ) {
 						if( options.success ) options.success.apply( this, arguments );
 
@@ -168,7 +175,10 @@ var CollectionService = module.exports = BaseService.extend( {
 					}
 				} );
 			} );
-		} else deleteLocally();
+		} else {
+			deleteLocally();
+			return Promise.resolve( { success : true } );
+		}
 	},
 
 	ids : function() {
@@ -176,27 +186,27 @@ var CollectionService = module.exports = BaseService.extend( {
 		return this._recordIds.slice( 0 );
 	},
 
-	sortIds : function( ids ) {
-		var allIds = this.ids();
+	// sortIds : function( ids ) {
+	// 	var allIds = this.ids();
 
-		var sortedIds = [];
+	// 	var sortedIds = [];
 
-		for( var i = 0, len = allIds.length; i < len; i++ ) {
-			if( ids.indexOf( allIds[ i ] ) !== -1 )
-				sortedIds.push( allIds[ i ] );
-		}
+	// 	for( var i = 0, len = allIds.length; i < len; i++ ) {
+	// 		if( ids.indexOf( allIds[ i ] ) !== -1 )
+	// 			sortedIds.push( allIds[ i ] );
+	// 	}
 
-		return sortedIds;
+	// 	return sortedIds;
 
-		// not sure why were were doing this below? we were returning just 'ids', but
-		// this seems equivilent to just returning sortedIds at this point
-		// // copy the sortedIds back to ids so its as if we did it in place
-		// for( i = 0, len = sortedIds.length; i < len; i++ ) {
-		// 	ids[ i ] = sortedIds[ i ];
-		// }
+	// 	// not sure why were were doing this below? we were returning just 'ids', but
+	// 	// this seems equivilent to just returning sortedIds at this point
+	// 	// // copy the sortedIds back to ids so its as if we did it in place
+	// 	// for( i = 0, len = sortedIds.length; i < len; i++ ) {
+	// 	// 	ids[ i ] = sortedIds[ i ];
+	// 	// }
 
-		// return ids;
-	},
+	// 	// return ids;
+	// },
 
 	isPresent : function( recordId, fieldName ) {
 		// fieldName is optional.. if not supplied function will return true iff recordId is present
@@ -207,26 +217,30 @@ var CollectionService = module.exports = BaseService.extend( {
 		return true;
 	},
 
-	sort : function() {
-		if( ! this.comparator )
-			throw new Error( 'Cannot sort without a comparator' );
-		
-		if( _.isString( this.comparator ) || this.comparator.length === 1 )
-			this._recordIds = this.sortBy( this.comparator, this );
-		else
-			this._recordIds.sort( _.bind( this.comparator, this ) );
+	isNew : function( recordId ) {
+		return _.contains( this._newRecordIds, recordId )
 	},
+
+	// sort : function() {
+	// 	if( ! this.comparator )
+	// 		throw new Error( 'Cannot sort without a comparator' );
+		
+	// 	if( _.isString( this.comparator ) || this.comparator.length === 1 )
+	// 		this._recordIds = this.sortBy( this.comparator, this );
+	// 	else
+	// 		this._recordIds.sort( _.bind( this.comparator, this ) );
+	// },
 
 	merge : function( newRecordDTOs ) {
 		var _this = this;
 
 		_.each( newRecordDTOs, function( thisDto ) {
-			_this._mergeDTO( thisDto, 'get', { sort : false } );
+			_this._mergeDTO( thisDto, 'get' );
 		}, this );
 
-		if( ! _.isUndefined( this.comparator ) ) {
-			this.sort();
-		}
+		// if( ! _.isUndefined( this.comparator ) ) {
+		// 	this.sort();
+		// }
 	},
 
 	toJSON : function( options ) {
@@ -289,8 +303,7 @@ var CollectionService = module.exports = BaseService.extend( {
 			merge : true
 		} );
 
-		var isNew = _.contains( this._newRecordIds, recordId );
-		var method = isNew ? 'create' : 'update';
+		var method = this.isNew( recordId ) ? 'create' : 'update';
 		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
@@ -300,13 +313,13 @@ var CollectionService = module.exports = BaseService.extend( {
 					if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 
 					if( options.merge ) _this._mergeDTO( returnedJson, method );
-					if( options.success ) options.success.apply( this, arguments );
+					if( options.success ) options.success.call( this, xhr, options );
 
 					resolve( { success : true, xhr : xhr } );
 				},
 				error : function( xhr ) {
-					if( options.error ) options.error.apply( this, arguments );
-					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
+					if( options.error ) options.error.call( this, xhr, options );
+					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.call( this, xhr, options );
 
 					resolve( { success : false, xhr : xhr } );
 				}
@@ -386,10 +399,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		return dto;
 	},
 
-	_mergeDTO : function( dto, method, options ) {
-		var options = _.defaults( {}, options, {
-			sort : true
-		} );
+	_mergeDTO : function( dto, method ) {
+		// var options = _.defaults( {}, options, {
+		// 	sort : true
+		// } );
 
 		var recordId = dto[ this._idFieldName ];
 
@@ -407,9 +420,9 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		_.defaults( this._recordsById[ recordId ], dto );
 
-		if( options.sort && ! _.isUndefined( this.comparator ) ) {
-			this.sort();
-		}
+		// if( options.sort && ! _.isUndefined( this.comparator ) ) {
+		// 	this.sort();
+		// }
 	},
 
 	_sync : function( url, method, payload, ajaxOptions ) {
