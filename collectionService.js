@@ -418,7 +418,7 @@ var CollectionService = module.exports = BaseService.extend( {
 			this.length++;
 		}
 
-		_.defaults( this._recordsById[ recordId ], dto );
+		_.extend( this._recordsById[ recordId ], dto );
 
 		// if( options.sort && ! _.isUndefined( this.comparator ) ) {
 		// 	this.sort();
