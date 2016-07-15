@@ -11,6 +11,9 @@ module.exports = Class.extend( {
 		this[ name ] = serviceInstance;
 	},
 
+	empty : function() {
+	},
+
 	merge : function( data ) {
 	},
 

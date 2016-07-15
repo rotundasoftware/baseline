@@ -7,65 +7,26 @@ module.exports = Class.extend( {
 
 		this.services = services;
 
-		this._tape = [];
-		this._recording = true;
-
 		// hook up dependencies
 		_.each( this.services, function( thisService ) {
-			_.each( thisService.dependencies, function( thisDependency ) {
-				thisService.setDependency( thisDependency, _this.services[ thisDependency ] );
+			thisService.baseline = _this;
+
+			_.each( _this.services, function( thisOtherService, thisOtherServiceIdent ) {
+				thisService.setDependency( thisOtherServiceIdent, thisOtherService );
 			} );
 		} );
 	},
-	
-	fetch : function( manifest, callback ) {
-		var _this = this;
 
-		var onGotResults = function( err, boatContents ) {
-			if( err ) return callback( err );
-
-			try {
-				_.each( boatContents, function( containerContents, containerName ) {
-					_this.services[ containerName ].merge( containerContents );
-				} );
-			} catch( err ) {
-				return callback( err );
-			}
-
-			callback();
-		};
-
-		if( _isServer() ) {
-			var boat = this.createBoat( manifest );
-			boat.stuff( onGotResults );
-		}
-		else {
-			// on the client side we have to do a remote sync request via our sync url. 
-			if( ! this._syncUrl ) return callback( new Error( 'Attempt to sync but no syncUrl has been supplied.' ) );
-
-			return $.ajax( {
-				url : this._syncUrl,
-				contentType : 'application/json',
-				type : 'POST',
-				data : JSON.stringify( manifest ),
-				dataType : 'json',
-				success : function( boatContents ) {
-					onGotResults( null, boatContents );
-				},
-				error : function( errorObj, error ) {
-					callback( new Error( 'Baseline sync failed: ' + errorObj.responseText ) );
-				}
-			} );
-		}
-	},
-
-	merge : function( data ) {
+	merge : function( data, options ) {
+		var options = _.extend( {}, { empty : false }, options );
 		var _this = this;
 
 		if( data ) {
 			_.each( data, function( thisServiceData, thisServiceIdent ) {
-				if( _this.services[ thisServiceIdent ] && _.isFunction( _this.services[ thisServiceIdent ].merge ) )
+				if( _this.services[ thisServiceIdent ] && _.isFunction( _this.services[ thisServiceIdent ].merge ) ) {
+					if( options.empty ) _this.services[ thisServiceIdent ].empty();
 					_this.services[ thisServiceIdent ].merge( thisServiceData );
+				}
 			} );
 		}
 	},
@@ -79,8 +40,9 @@ module.exports = Class.extend( {
 
 			_.each( dependencies, function( thisDependency ) {
 				var thisDependencyService = _this.services[ thisDependency ];
-				if( _.isUndefined( thisDependencyService ) )
+				if( _.isUndefined( thisDependencyService ) ) {
 					throw new Error( 'The service \'' + thisDependency + '\' is not available on this page.' );
+				}
 
 				obj[ thisDependency ] = thisDependencyService;
 			} );

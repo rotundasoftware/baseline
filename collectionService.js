@@ -12,17 +12,11 @@ var CollectionService = module.exports = BaseService.extend( {
 		} );
 
 		if( _.isUndefined( this.collectionName ) ) throw new Error( 'The collectionName attribute must be defined on collection service instances.' );
-		// if( _.isUndefined( this.fieldNames ) ) throw new Error( 'The fieldNames attribute must be defined on data service instances.' );
-
-		this.length = 0;
-		
-		// this._fieldNames = this.fieldNames;
-		this._recordIds = [];
-		this._recordsById = {};
-		this._newRecordIds = [];
 
 		this._idFieldName = options.idFieldName;
 		this._defaultAjaxErrorHandler = options.defaultAjaxErrorHandler;
+
+		this.empty();
 
 		Events.mixin( this );
 
@@ -52,10 +46,6 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.trigger( 'create', initialFieldValues, options );
 
 		this._newRecordIds.push( newRecordId );
-
-		// if( ! _.isUndefined( this.comparator ) ) {
-		// 	this.sort();
-		// }
 
 		return newRecordId;
 	},
@@ -186,28 +176,6 @@ var CollectionService = module.exports = BaseService.extend( {
 		return this._recordIds.slice( 0 );
 	},
 
-	// sortIds : function( ids ) {
-	// 	var allIds = this.ids();
-
-	// 	var sortedIds = [];
-
-	// 	for( var i = 0, len = allIds.length; i < len; i++ ) {
-	// 		if( ids.indexOf( allIds[ i ] ) !== -1 )
-	// 			sortedIds.push( allIds[ i ] );
-	// 	}
-
-	// 	return sortedIds;
-
-	// 	// not sure why were were doing this below? we were returning just 'ids', but
-	// 	// this seems equivilent to just returning sortedIds at this point
-	// 	// // copy the sortedIds back to ids so its as if we did it in place
-	// 	// for( i = 0, len = sortedIds.length; i < len; i++ ) {
-	// 	// 	ids[ i ] = sortedIds[ i ];
-	// 	// }
-
-	// 	// return ids;
-	// },
-
 	isPresent : function( recordId, fieldName ) {
 		// fieldName is optional.. if not supplied function will return true iff recordId is present
 
@@ -221,26 +189,20 @@ var CollectionService = module.exports = BaseService.extend( {
 		return _.contains( this._newRecordIds, recordId )
 	},
 
-	// sort : function() {
-	// 	if( ! this.comparator )
-	// 		throw new Error( 'Cannot sort without a comparator' );
+	empty : function() {
+		this.length = 0;
 		
-	// 	if( _.isString( this.comparator ) || this.comparator.length === 1 )
-	// 		this._recordIds = this.sortBy( this.comparator, this );
-	// 	else
-	// 		this._recordIds.sort( _.bind( this.comparator, this ) );
-	// },
+		this._recordIds = [];
+		this._recordsById = {};
+		this._newRecordIds = [];
+	},
 
-	merge : function( newRecordDTOs ) {
+	merge : function( newRecordDTOs, options ) {
 		var _this = this;
 
 		_.each( newRecordDTOs, function( thisDto ) {
 			_this._mergeDTO( thisDto, 'get' );
 		}, this );
-
-		// if( ! _.isUndefined( this.comparator ) ) {
-		// 	this.sort();
-		// }
 	},
 
 	toJSON : function( options ) {
@@ -400,10 +362,6 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	_mergeDTO : function( dto, method ) {
-		// var options = _.defaults( {}, options, {
-		// 	sort : true
-		// } );
-
 		var recordId = dto[ this._idFieldName ];
 
 		if( _.isUndefined( recordId ) )
@@ -419,10 +377,6 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 
 		_.extend( this._recordsById[ recordId ], dto );
-
-		// if( options.sort && ! _.isUndefined( this.comparator ) ) {
-		// 	this.sort();
-		// }
 	},
 
 	_sync : function( url, method, payload, ajaxOptions ) {
