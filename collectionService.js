@@ -308,6 +308,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		return this.where( attrs, true );
 	},
 
+	pluck : function( propertyName ) {
+		return _.pluck( this._recordsById, propertyName );
+	},
+
 	registerTapeOperation : function( operationName, tapeOperationDescriptor ) {
 		this.arbitrator.tapeOperations[ operationName ] = tapeOperationDescriptor.arbitrator;
 		this.tapeOperations[ operationName ] = tapeOperationDescriptor.client;
