@@ -232,11 +232,12 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
+			variablePartsOfEndpoint : {},
 			success : undefined,
 			error : undefined
 		} );
 
-		var url = this._getRESTEndpoint( 'get', recordId );
+		var url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
 
 		return new Promise( function( resolve, reject ) {
 			_this._sync( url, 'get', null, {
@@ -332,8 +333,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		return uuid.v4();
 	},
 
-	_getRESTEndpoint : function( method, recordIdOrIds ) {
+	_getRESTEndpoint : function( method, recordIdOrIds, variableParts ) {
 		var _this = this;
+
+		if( _.isUndefined( variableParts ) ) variableParts = {};
 
 		var base = this.url;
 		if( _.isFunction( base ) ) base = base.call( this );
@@ -342,6 +345,14 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		var endpoint = base;
 		var recordId = recordIdOrIds;
+
+		// if we have any pre-supplied variable parts, fill those in. necessary for cases
+		// like fetching a record when we have no existing information in baseline regarding,
+		// that record, so we can't build the url internally.
+		_.each( variableParts, function( thisVariablePartValue, thisVariablePartKey ) {
+			endpoint = endpoint.replace( ':' + thisVariablePartKey, thisVariablePartValue );
+		} );
+
 		endpoint = this._fillInVariablePartsOfRESTEndpoint( recordId, endpoint );
 
 		if( method != 'create' && ! _.isArray( recordIdOrIds ) ) {
@@ -353,7 +364,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	_fillInVariablePartsOfRESTEndpoint : function( recordId, endpoint ) {
 		var _this = this;
-	
+
 		return endpoint.replace( /\/:(\w+)/g, function( match, fieldName ) {
 			return '/' + _this.get( recordId, fieldName );
 		} );
