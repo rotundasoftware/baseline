@@ -438,7 +438,7 @@ _.each( underscoreTableMethodNames, function( thisMethodName ) {
 } );
 
 // Underscore methods that take a property name as an argument.
-var attributeMethods = [ 'groupBy', 'countBy', 'sortBy' ];
+var attributeMethods = [ 'groupBy', 'countBy' ]; // used to proxy sortBy, but unclear on use case here
 
 // Use attributes instead of properties.
 _.each( attributeMethods, function( method ) {
