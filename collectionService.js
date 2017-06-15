@@ -93,9 +93,9 @@ var CollectionService = module.exports = BaseService.extend( {
 		
 		// not sure we want to check if the data exists before setting it.. for example, we create a new record, and then want to fill
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
-		// but jury is still out, so we will do it this way for now. nevermind, don't like this, let's keep things explicit.
-		// IF WE NEED TO ADD A COLUMN, DO SO TROUGH merge()
-		if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
+		// but jury is still out, so we will do it this way for now. we tried this more lax interpretation and doesn't seem to cause problems,
+		// let's keep it as is. (The alternative would be to force setting non-present fields through merge.)
+		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
 		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
 		else this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
