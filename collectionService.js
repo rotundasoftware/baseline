@@ -93,9 +93,9 @@ var CollectionService = module.exports = BaseService.extend( {
 		
 		// not sure we want to check if the data exists before setting it.. for example, we create a new record, and then want to fill
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
-		// but jury is still out, so we will do it this way for now. nevermind, don't like this, let's keep things explicit. only way
-		// to add a column is through merge, or
-		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
+		// but jury is still out, so we will do it this way for now. nevermind, don't like this, let's keep things explicit.
+		// IF WE NEED TO ADD A COLUMN, DO SO TROUGH merge()
+		if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
 		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
 		else this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
@@ -197,8 +197,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		this._newRecordIds = [];
 	},
 
-	merge : function( newRecordDTOs, options ) {
+	merge : function( newRecordDTOs ) {
 		var _this = this;
+
+		if( ! _.isArray( newRecordDTOs ) ) newRecordDTOs = [ newRecordDTOs ];
 
 		_.each( newRecordDTOs, function( thisDto ) {
 			_this._mergeDTO( thisDto, 'get' );
@@ -379,8 +381,9 @@ var CollectionService = module.exports = BaseService.extend( {
 	_mergeDTO : function( dto, method ) {
 		var recordId = dto[ this._idFieldName ];
 
-		if( _.isUndefined( recordId ) )
+		if( _.isUndefined( recordId ) ) {
 			throw new Error( 'Each dto must define a unique id.' );
+		}
 
 		// make sure the attributes we end up storing are copies, in case
 		// somebody is using the original newRecordDTOs.
