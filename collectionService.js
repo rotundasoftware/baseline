@@ -42,7 +42,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		this.merge( [ initialFieldValues ] );
 
-		this.trigger( 'operation', 'createRecord', params );
+		// this.trigger( 'operation', 'createRecord', params );
 		this.trigger( 'create', initialFieldValues, options );
 
 		this._newRecordIds.push( newRecordId );
@@ -107,9 +107,9 @@ var CollectionService = module.exports = BaseService.extend( {
 			value : fieldValue
 		};
 
-		this.trigger( 'operation', 'setField', params );
+		// this.trigger( 'operation', 'setField', params );
 		this.trigger( 'set', recordId, fieldName, fieldValue );
-		this.trigger( 'set:' + recordId, fieldName, fieldValue );
+		// this.trigger( 'set:' + recordId, fieldName, fieldValue );
 	},
 
 	destroy : function( recordIdOrIds, options ) {
@@ -134,7 +134,7 @@ var CollectionService = module.exports = BaseService.extend( {
 					recordId : thisRecordId
 				};
 
-				_this.trigger( 'operation', 'destroyRecord', params );
+				// _this.trigger( 'operation', 'destroyRecord', params );
 				_this.trigger( 'destroy', thisRecordId );
 			} );
 		}

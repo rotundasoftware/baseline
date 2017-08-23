@@ -31,22 +31,9 @@ module.exports = Class.extend( {
 		}
 	},
 
+	// RESOLVE DEPENDENCIES IS DEPRECIATED. Just use Object.assign( obj, baseline.services ) instead.
 	resolveDependencies : function( obj ) {
-		var _this = this;
-		
-		if( obj.dependencies ) {
-			var dependencies = _.result( obj, 'dependencies' );
-			if( ! _.isArray( dependencies ) ) throw new Error( '`dependencies` property must be an array of service identifiers.' );
-
-			_.each( dependencies, function( thisDependency ) {
-				var thisDependencyService = _this.services[ thisDependency ];
-				if( _.isUndefined( thisDependencyService ) ) {
-					throw new Error( 'The service \'' + thisDependency + '\' is not available on this page.' );
-				}
-
-				obj[ thisDependency ] = thisDependencyService;
-			} );
-		}
+		Object.assign( obj, this.services )
 	}
 } );
 
