@@ -8,13 +8,24 @@ var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
 		options = _.defaults( {}, options, {
 			idFieldName : 'id',
-			defaultAjaxErrorHandler : undefined
+			defaultAjaxErrorHandler : undefined,
+			ajax : function( options ) {
+				return new Promise( ( resolve, reject ) => {
+					$.ajax( options ).done( ( data, textStatus, xhr ) => {
+						resolve( { success : true, xhr } );
+					} ).fail( ( xhr, textStatus ) => {
+						resolve( { success : false, xhr } );
+					} );
+				} );
+			}
 		} );
 
 		if( _.isUndefined( this.collectionName ) ) throw new Error( 'The collectionName attribute must be defined on collection service instances.' );
 
 		this._idFieldName = options.idFieldName;
-		this._defaultAjaxErrorHandler = options.defaultAjaxErrorHandler;
+		this._ajax = options.ajax;
+
+		// this._defaultAjaxErrorHandler = options.defaultAjaxErrorHandler;
 
 		this.empty();
 
@@ -117,8 +128,6 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		options = _.defaults( {}, options, {
 			sync : true,
-			success : null,
-			error : null
 		} );
 
 		var deleteLocally = function() {
@@ -149,21 +158,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( recordIdsToDeleteRemotely.length > 0 ) {
 			var url = this._getRESTEndpoint( 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : recordIdsToDeleteRemotely[0] );
 
-			return new Promise( function( resolve, reject ) {
-				_this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined, {
-					success : function( returnedJson, textStatus, xhr ) {
-						if( options.success ) options.success.apply( this, arguments );
+			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined ).then( result => {
+				if( result.success ) deleteLocally();
 
-						deleteLocally();
-
-						resolve( { success : true, xhr : xhr } );
-					},
-					error : function( xhr ) {
-						if( options.error ) options.error.apply( this, arguments );
-						else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
-						resolve( { success : false, xhr : xhr } );
-					}
-				} );
+				return result;
 			} );
 		} else {
 			deleteLocally();
@@ -234,28 +232,15 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
-			variablePartsOfEndpoint : {},
-			success : undefined,
-			error : undefined
+			variablePartsOfEndpoint : {}
 		} );
 
 		var url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
 
-		return new Promise( function( resolve, reject ) {
-			_this._sync( url, 'get', null, {
-				success : function( returnedJson, textStatus, xhr ) {
-					_this._mergeDTO( returnedJson, 'get' );
-					if( options.success ) options.success.apply( this, arguments );
+		return _this._sync( url, 'get', null ).then( result => {
+			if( result.success ) _this._mergeDTO( result.data, 'get' );
 
-					resolve( { success : true, xhr : xhr } );
-				},
-				error : function( xhr ) {
-					if( options.error ) options.error.apply( this, arguments );
-					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.apply( this, arguments );
-
-					resolve( { success : false, xhr : xhr } );
-				}
-			} );
+			return result;
 		} );
 	},
 
@@ -263,8 +248,6 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
-			success : undefined,
-			error : undefined,
 			merge : true
 		} );
 
@@ -272,23 +255,13 @@ var CollectionService = module.exports = BaseService.extend( {
 		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
-		return new Promise( function( resolve, reject ) {
-			_this._sync( url, method, dto, {
-				success : function( returnedJson, textStatus, xhr ) {
-					if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
+		return _this._sync( url, method, dto ).then( result => {
+			if( result.success ) {
+				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
+				if( options.merge ) _this._mergeDTO( result.data, method );
+			}
 
-					if( options.merge ) _this._mergeDTO( returnedJson, method );
-					if( options.success ) options.success.call( this, xhr, options );
-
-					resolve( { success : true, xhr : xhr } );
-				},
-				error : function( xhr ) {
-					if( options.error ) options.error.call( this, xhr, options );
-					else if( _this._defaultAjaxErrorHandler ) _this._defaultAjaxErrorHandler.call( this, xhr, options );
-
-					resolve( { success : false, xhr : xhr } );
-				}
-			} );
+			return result;
 		} );
 	},
 
@@ -418,8 +391,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		};
 
 		// Make the request, allowing the user to override any Ajax options.
-		var xhr = $.ajax( _.extend( params, ajaxOptions ) );
-		return xhr;
+		return this._ajax( _.extend( params, ajaxOptions ) );
 	}
 } );
 
