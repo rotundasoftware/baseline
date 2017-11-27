@@ -3,9 +3,6 @@
   "version": "7.0.0",
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
   "main": "baseline.js",
-  "browser" : {
-    "collectionService.js" : "dist/collectionService.es"
-  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
