@@ -4,16 +4,18 @@ var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
 var $ = require( 'jquery' );
 
+require('es6-promise').polyfill();
+
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
 		options = _.defaults( {}, options, {
 			idFieldName : 'id',
 			defaultAjaxErrorHandler : undefined,
 			ajax : function( options ) {
-				return new Promise( ( resolve, reject ) => {
-					$.ajax( options ).done( ( data, textStatus, xhr ) => {
+				return new Promise( function( resolve, reject ) {
+					$.ajax( options ).done( function( data, textStatus, xhr ) {
 						resolve( { success : true, xhr } );
-					} ).fail( ( xhr, textStatus ) => {
+					} ).fail( function( xhr, textStatus ) {
 						resolve( { success : false, xhr } );
 					} );
 				} );
@@ -158,7 +160,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( recordIdsToDeleteRemotely.length > 0 ) {
 			var url = this._getRESTEndpoint( 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : recordIdsToDeleteRemotely[0] );
 
-			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined ).then( result => {
+			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined ).then( function( result ) {
 				if( result.success ) deleteLocally();
 
 				return result;
@@ -237,7 +239,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		var url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
 
-		return _this._sync( url, 'get', null ).then( result => {
+		return _this._sync( url, 'get', null ).then( function( result ) {
 			if( result.success ) _this._mergeDTO( result.data, 'get' );
 
 			return result;
@@ -255,7 +257,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
-		return _this._sync( url, method, dto ).then( result => {
+		return _this._sync( url, method, dto ).then( function( result ) {
 			if( result.success ) {
 				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 				if( options.merge ) _this._mergeDTO( result.data, method );
