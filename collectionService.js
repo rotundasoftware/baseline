@@ -274,6 +274,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( _.isEmpty( attrs ) ) return first ? void 0 : [];
 		return this[ first ? 'find' : 'filter' ]( function( thisRecordId ) {
 			for( var key in attrs ) {
+				if( _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
 				if( attrs[ key ] !== _this._recordsById[ thisRecordId ][ key ] ) return false;
 			}
 			return true;
