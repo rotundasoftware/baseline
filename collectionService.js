@@ -269,12 +269,12 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	// Return records with matching attributes. Useful for simple cases of
 	// `filter`.
-	where : function( attrs, first ) {
+	where : function( attrs, first, ignoreMissingData ) {
 		var _this = this;
 		if( _.isEmpty( attrs ) ) return first ? void 0 : [];
 		return this[ first ? 'find' : 'filter' ]( function( thisRecordId ) {
 			for( var key in attrs ) {
-				if( _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
+				if( ! ignoreMissingData && _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
 				if( attrs[ key ] !== _this._recordsById[ thisRecordId ][ key ] ) return false;
 			}
 			return true;
@@ -283,8 +283,8 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	// Return the first model with matching attributes. Useful for simple cases
 	// of `find`.
-	findWhere : function( attrs ) {
-		return this.where( attrs, true );
+	findWhere : function( attrs, ignoreMissingData ) {
+		return this.where( attrs, true, ignoreMissingData );
 	},
 
 	pluck : function( propertyName ) {
@@ -333,7 +333,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		endpoint = this._fillInVariablePartsOfRESTEndpoint( recordId, endpoint );
 
-		if( method != 'create' && ! _.isArray( recordIdOrIds ) ) {
+		if( _.contains( [ 'update', 'delete', 'patch', 'get' ], method ) && ! _.isArray( recordIdOrIds ) ) {
 			endpoint = endpoint.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
 		}
 
@@ -381,7 +381,8 @@ var CollectionService = module.exports = BaseService.extend( {
 			'update' : 'PUT',
 			'patch' :  'PATCH',
 			'delete' : 'DELETE',
-			'get' :   'GET'
+			'get' :   'GET',
+			'search' :   'SEARCH'
 		};
 
 		// Default JSON-request options.
@@ -390,7 +391,7 @@ var CollectionService = module.exports = BaseService.extend( {
 			type : methodMap[ method ],
 			dataType : 'json',
 			contentType : 'application/json',
-			data : method === 'get' ? undefined : JSON.stringify( payload )
+			data : _.isEmpty( payload ) ? undefined : JSON.stringify( payload )
 		};
 
 		// Make the request, allowing the user to override any Ajax options.
