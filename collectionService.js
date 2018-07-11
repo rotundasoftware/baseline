@@ -130,6 +130,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		options = _.defaults( {}, options, {
 			sync : true,
+			ajax : {}
 		} );
 
 		var deleteLocally = function() {
@@ -160,7 +161,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( recordIdsToDeleteRemotely.length > 0 ) {
 			var url = this._getRESTEndpoint( 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : recordIdsToDeleteRemotely[0] );
 
-			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined ).then( function( result ) {
+			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined, options.ajax ).then( function( result ) {
 				if( result.success ) deleteLocally();
 
 				return result;
@@ -234,12 +235,13 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
-			variablePartsOfEndpoint : {}
+			variablePartsOfEndpoint : {},
+			ajax : {}
 		} );
 
 		var url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
 
-		return _this._sync( url, 'get', null ).then( function( result ) {
+		return _this._sync( url, 'get', null, options.ajax ).then( function( result ) {
 			if( result.success ) _this._mergeDTO( result.data, 'get' );
 
 			return result;
@@ -250,14 +252,15 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
-			merge : true
+			merge : true,
+			ajax : {}
 		} );
 
 		var method = this.isNew( recordId ) ? 'create' : 'update';
 		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
-		return _this._sync( url, method, dto ).then( function( result ) {
+		return _this._sync( url, method, dto, options.ajax ).then( function( result ) {
 			if( result.success ) {
 				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 				if( options.merge ) _this._mergeDTO( result.data, method );
