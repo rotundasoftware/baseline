@@ -40,6 +40,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		options = _.defaults( {}, options, { silent : false } );
 
 		if( ! initialFieldValues ) initialFieldValues = {};
+		else initialFieldValues = this._copyRecord( initialFieldValues );
 
 		var newRecordId = initialFieldValues[ this._idFieldName ];
 
