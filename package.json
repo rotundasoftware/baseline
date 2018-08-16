@@ -1,6 +1,6 @@
 {
   "name": "baselinejs",
-  "version": "7.2.0",
+  "version": "7.2.1",
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
   "main": "baseline.js",
   "scripts": {
