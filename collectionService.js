@@ -64,6 +64,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		return newRecordId;
 	},
 
+	id : function() {
+		return this.get( this._idFieldName );
+	},
+
 	get : function( recordId, fieldName ) {
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 
