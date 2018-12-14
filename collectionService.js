@@ -40,6 +40,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		options = _.defaults( {}, options, { silent : false } );
 
 		if( ! initialFieldValues ) initialFieldValues = {};
+		else initialFieldValues = this._copyRecord( initialFieldValues );
 
 		var newRecordId = initialFieldValues[ this._idFieldName ];
 
@@ -61,6 +62,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		this._newRecordIds.push( newRecordId );
 
 		return newRecordId;
+	},
+
+	id : function() {
+		return this.get( this._idFieldName );
 	},
 
 	get : function( recordId, fieldName ) {
@@ -130,6 +135,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		options = _.defaults( {}, options, {
 			sync : true,
+			ajax : {}
 		} );
 
 		var deleteLocally = function() {
@@ -160,7 +166,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( recordIdsToDeleteRemotely.length > 0 ) {
 			var url = this._getRESTEndpoint( 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : recordIdsToDeleteRemotely[0] );
 
-			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined ).then( function( result ) {
+			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined, options.ajax ).then( function( result ) {
 				if( result.success ) deleteLocally();
 
 				return result;
@@ -234,12 +240,13 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
-			variablePartsOfEndpoint : {}
+			variablePartsOfEndpoint : {},
+			ajax : {}
 		} );
 
 		var url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
 
-		return _this._sync( url, 'get', null ).then( function( result ) {
+		return _this._sync( url, 'get', null, options.ajax ).then( function( result ) {
 			if( result.success ) _this._mergeDTO( result.data, 'get' );
 
 			return result;
@@ -250,14 +257,15 @@ var CollectionService = module.exports = BaseService.extend( {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
-			merge : true
+			merge : true,
+			ajax : {}
 		} );
 
 		var method = this.isNew( recordId ) ? 'create' : 'update';
 		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
-		return _this._sync( url, method, dto ).then( function( result ) {
+		return _this._sync( url, method, dto, options.ajax ).then( function( result ) {
 			if( result.success ) {
 				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 				if( options.merge ) _this._mergeDTO( result.data, method );
@@ -269,11 +277,12 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	// Return records with matching attributes. Useful for simple cases of
 	// `filter`.
-	where : function( attrs, first ) {
+	where : function( attrs, first, ignoreMissingData ) {
 		var _this = this;
 		if( _.isEmpty( attrs ) ) return first ? void 0 : [];
 		return this[ first ? 'find' : 'filter' ]( function( thisRecordId ) {
 			for( var key in attrs ) {
+				if( ! ignoreMissingData && _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
 				if( attrs[ key ] !== _this._recordsById[ thisRecordId ][ key ] ) return false;
 			}
 			return true;
@@ -282,8 +291,8 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	// Return the first model with matching attributes. Useful for simple cases
 	// of `find`.
-	findWhere : function( attrs ) {
-		return this.where( attrs, true );
+	findWhere : function( attrs, ignoreMissingData ) {
+		return this.where( attrs, true, ignoreMissingData );
 	},
 
 	pluck : function( propertyName ) {
@@ -332,7 +341,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		endpoint = this._fillInVariablePartsOfRESTEndpoint( recordId, endpoint );
 
-		if( method != 'create' && ! _.isArray( recordIdOrIds ) ) {
+		if( _.contains( [ 'update', 'delete', 'patch', 'get' ], method ) && ! _.isArray( recordIdOrIds ) ) {
 			endpoint = endpoint.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
 		}
 
@@ -380,7 +389,8 @@ var CollectionService = module.exports = BaseService.extend( {
 			'update' : 'PUT',
 			'patch' :  'PATCH',
 			'delete' : 'DELETE',
-			'get' :   'GET'
+			'get' :   'GET',
+			'search' :   'SEARCH'
 		};
 
 		// Default JSON-request options.
@@ -389,7 +399,7 @@ var CollectionService = module.exports = BaseService.extend( {
 			type : methodMap[ method ],
 			dataType : 'json',
 			contentType : 'application/json',
-			data : method === 'get' ? undefined : JSON.stringify( payload )
+			data : _.isEmpty( payload ) ? undefined : JSON.stringify( payload )
 		};
 
 		// Make the request, allowing the user to override any Ajax options.
