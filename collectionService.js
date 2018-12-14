@@ -14,9 +14,9 @@ var CollectionService = module.exports = BaseService.extend( {
 			ajax : function( options ) {
 				return new Promise( function( resolve, reject ) {
 					$.ajax( options ).done( function( data, textStatus, xhr ) {
-						resolve( { success : true, xhr } );
+						resolve( { success : true, xhr : xhr } );
 					} ).fail( function( xhr, textStatus ) {
-						resolve( { success : false, xhr } );
+						resolve( { success : false, xhr: xhr } );
 					} );
 				} );
 			}
