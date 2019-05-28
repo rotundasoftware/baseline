@@ -74,7 +74,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		var fieldValue = this._recordsById[ recordId ][ fieldName ];
 		if( _.isUndefined( fieldValue ) ) throw new Error( 'Field \'' + fieldName + '\' is not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
-		return this._copyFieldValue( fieldValue );
+		return fieldValue;
 	},
 
 	gets : function( recordId, fields ) {
