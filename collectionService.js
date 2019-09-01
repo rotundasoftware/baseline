@@ -269,7 +269,7 @@ var CollectionService = module.exports = BaseService.extend( {
 				if( ! isUpdate ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 				if( options.merge ) _this._mergeDTO( result.data );
 
-				this.trigger( 'save', recordId, isUpdate, options );
+				_this.trigger( 'save', recordId, isUpdate, options );
 			}
 
 			return result;
