@@ -56,7 +56,6 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		this.merge( [ initialFieldValues ] );
 
-		// this.trigger( 'operation', 'createRecord', params );
 		this.trigger( 'create', initialFieldValues, options );
 
 		this._newRecordIds.push( newRecordId );
@@ -151,8 +150,7 @@ var CollectionService = module.exports = BaseService.extend( {
 					recordId : thisRecordId
 				};
 
-				// _this.trigger( 'operation', 'destroyRecord', params );
-				_this.trigger( 'destroy', thisRecordId );
+				_this.trigger( 'destroy', thisRecordId, options );
 			} );
 		}
 
@@ -270,6 +268,8 @@ var CollectionService = module.exports = BaseService.extend( {
 			if( result.success ) {
 				if( ! isUpdate ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
 				if( options.merge ) _this._mergeDTO( result.data );
+
+				this.trigger( 'save', recordId, isUpdate, options );
 			}
 
 			return result;
