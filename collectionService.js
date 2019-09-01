@@ -166,7 +166,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( recordIdsToDeleteRemotely.length > 0 ) {
 			var url = this._getRESTEndpoint( 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : recordIdsToDeleteRemotely[0] );
 
-			return _this._sync( url, 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined, options.ajax ).then( function( result ) {
+			return _this._sync( url, 'DELETE', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined, options.ajax ).then( function( result ) {
 				if( result.success ) deleteLocally();
 
 				return result;
@@ -209,7 +209,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( ! _.isArray( newRecordDTOs ) ) newRecordDTOs = [ newRecordDTOs ];
 
 		_.each( newRecordDTOs, function( thisDto ) {
-			_this._mergeDTO( thisDto, 'get' );
+			_this._mergeDTO( thisDto );
 		}, this );
 	},
 
@@ -246,8 +246,8 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		var url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
 
-		return _this._sync( url, 'get', null, options.ajax ).then( function( result ) {
-			if( result.success ) _this._mergeDTO( result.data, 'get' );
+		return _this._sync( url, 'GET', null, options.ajax ).then( function( result ) {
+			if( result.success ) _this._mergeDTO( result.data );
 
 			return result;
 		} );
@@ -262,13 +262,14 @@ var CollectionService = module.exports = BaseService.extend( {
 		} );
 
 		var method = this.isNew( recordId ) ? 'create' : 'update';
+		var isUpdate = ! this.isNew( recordId );
 		var url = _this._getRESTEndpoint( method, recordId );
 		var dto = this._recordToDTO( recordId, method );
 
-		return _this._sync( url, method, dto, options.ajax ).then( function( result ) {
+		return _this._sync( url, isUpdate ? 'PUT' : 'POST', dto, options.ajax ).then( function( result ) {
 			if( result.success ) {
-				if( method === 'create' ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
-				if( options.merge ) _this._mergeDTO( result.data, method );
+				if( ! isUpdate ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
+				if( options.merge ) _this._mergeDTO( result.data );
 			}
 
 			return result;
@@ -362,7 +363,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		return dto;
 	},
 
-	_mergeDTO : function( dto, method ) {
+	_mergeDTO : function( dto ) {
 		var recordId = dto[ this._idFieldName ];
 
 		if( _.isUndefined( recordId ) ) {
@@ -381,22 +382,13 @@ var CollectionService = module.exports = BaseService.extend( {
 		_.extend( this._recordsById[ recordId ], dto );
 	},
 
-	_sync : function( url, method, payload, ajaxOptions ) {
+	_sync : function( url, verb, payload, ajaxOptions ) {
 		var options = _.defaults( {}, options );
-
-		var methodMap = {
-			'create' : 'POST',
-			'update' : 'PUT',
-			'patch' :  'PATCH',
-			'delete' : 'DELETE',
-			'get' :   'GET',
-			'search' :   'SEARCH'
-		};
 
 		// Default JSON-request options.
 		var params = {
 			url : url,
-			type : methodMap[ method ],
+			type : verb,
 			dataType : 'json',
 			contentType : 'application/json',
 			data : _.isEmpty( payload ) ? undefined : JSON.stringify( payload )
