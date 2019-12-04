@@ -40,7 +40,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		options = _.defaults( {}, options, { silent : false } );
 
 		if( ! initialFieldValues ) initialFieldValues = {};
-		else initialFieldValues = this._copyRecord( initialFieldValues );
+		else initialFieldValues = this._cloneRecord( initialFieldValues );
 
 		var newRecordId = initialFieldValues[ this._idFieldName ];
 
@@ -67,16 +67,26 @@ var CollectionService = module.exports = BaseService.extend( {
 		return this.get( this._idFieldName );
 	},
 
-	get : function( recordId, fieldName ) {
+	get : function( recordId, fieldName, options ) {
+		options = Object.assign( {
+			clone : false
+		}, options );
+		
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 
 		var fieldValue = this._recordsById[ recordId ][ fieldName ];
+		if( options.clone ) fieldValue = this._cloneFieldValue( fieldValue );
+
 		if( _.isUndefined( fieldValue ) ) throw new Error( 'Field \'' + fieldName + '\' is not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
 		return fieldValue;
 	},
 
-	gets : function( recordId, fields ) {
+	gets : function( recordId, fields, options ) {
+		options = Object.assign( {
+			clone : false
+		}, options );
+
 		var _this = this;
 
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
@@ -87,7 +97,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		var values = {};
 
 		_.each( fields, function( thisFieldName ) {
-			values[ thisFieldName ] = _this.get( recordId, thisFieldName );
+			values[ thisFieldName ] = _this.get( recordId, thisFieldName, { clone : options.clone } );
 		} );
 
 		return values;
@@ -115,7 +125,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
 		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
-		else this._recordsById[ recordId ][ fieldName ] = this._copyFieldValue( fieldValue );
+		else this._recordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
 
 		var params = {
 			collectionName : this.collectionName,
@@ -223,13 +233,13 @@ var CollectionService = module.exports = BaseService.extend( {
 			return _.map( options.recordIds, function( thisRecordId ) {
 				if( ! _this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
 			
-				return this._copyRecord( _.pick( this._recordsById[ thisRecordId ], options.fields ) );
+				return this._cloneRecord( _.pick( this._recordsById[ thisRecordId ], options.fields ) );
 			}, this );
 		} else {
 			return _.map( options.recordIds, function( thisRecordId ) {
 				if( ! _this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
 		
-				return this._copyRecord( this._recordsById[ thisRecordId ] );
+				return this._cloneRecord( this._recordsById[ thisRecordId ] );
 			}, this );
 		}
 	},
@@ -305,15 +315,16 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.tapeOperations[ operationName ] = tapeOperationDescriptor.client;
 	},
 
-	_copyRecord : function( record ) {
+	_cloneRecord : function( record ) {
 		return JSON.parse( JSON.stringify( record ) );
 	},
 
-	_copyFieldValue : function( fieldValue ) {
-		if( fieldValue instanceof Object )
+	_cloneFieldValue : function( fieldValue ) {
+		if( fieldValue instanceof Object ) {
 			return JSON.parse( JSON.stringify( fieldValue ) );
-		else
+		} else {
 			return fieldValue;
+		}
 	},
 
 	_getUniqueId : function() {
@@ -411,7 +422,7 @@ var underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce'
 _.each( underscoreTableMethodNames, function( thisMethodName ) {
 	CollectionService.prototype[ thisMethodName ] = function() {
 		var args = Array.prototype.slice.call( arguments );
-		args.unshift( this._recordIds );
+		args.unshift( this.ids() );
 		return _[ thisMethodName ].apply( _, args );
 	};
 } );
