@@ -3,7 +3,7 @@ var BaseService = require( './baseService' );
 var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
 var $ = require( 'jquery' );
-var whereQuery = require( 'where-query' );
+var matchesWhereQuery = require( 'matches-where-query' );
 
 require('es6-promise').polyfill();
 
@@ -308,7 +308,7 @@ var CollectionService = module.exports = BaseService.extend( {
 				}
 			}
 
-			return whereQuery.matches( _this._recordsById[ thisRecordId ], attrs );
+			return matchesWhereQuery( _this._recordsById[ thisRecordId ], attrs );
 		} );
 	},
 
