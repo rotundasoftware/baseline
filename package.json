@@ -1,6 +1,6 @@
 {
   "name": "baselinejs",
-  "version": "8.2.0",
+  "version": "9.0.0",
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
   "main": "baseline.js",
   "scripts": {
@@ -9,7 +9,7 @@
   "author": "Rotunda Software",
   "dependencies": {
     "backbone-events-standalone": "^0.2.1",
-    "matches-where-query" : "^1.0.0",
+    "matches-where-query": "^1.0.0",
     "class-con-leche": "^0.0.0",
     "es6-promise": "^4.1.1",
     "jquery": "^2.1.4",
