@@ -9,7 +9,7 @@
   "author": "Rotunda Software",
   "dependencies": {
     "backbone-events-standalone": "^0.2.1",
-    "@rotundasoftware/where-query" : "^2.0.1",
+    "matches-where-query" : "^1.0.0",
     "class-con-leche": "^0.0.0",
     "es6-promise": "^4.1.1",
     "jquery": "^2.1.4",

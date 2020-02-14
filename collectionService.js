@@ -3,6 +3,7 @@ var BaseService = require( './baseService' );
 var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
 var $ = require( 'jquery' );
+var whereQuery = require( 'where-query' );
 
 require('es6-promise').polyfill();
 
@@ -290,24 +291,35 @@ var CollectionService = module.exports = BaseService.extend( {
 	// `filter`. Unlike in underscore, if values of attrs is an array, then
 	// a record will be included in the return if the corresponding attribute
 	// on the record is included in the elements of attrs.
-	where : function( attrs, first, ignoreMissingData ) {
+
+	where : function( attrs, options ) {
 		var _this = this;
-		if( _.isEmpty( attrs ) ) return first ? void 0 : [];
-		return this[ first ? 'find' : 'filter' ]( function( thisRecordId ) {
+		
+		options = _.defaults( {}, options, {
+			first : false,
+			ignoreMissingData : false,
+		} );
+
+		if( _.isEmpty( attrs ) ) return options.first ? void 0 : [];
+		return this[ options.first ? 'find' : 'filter' ]( function( thisRecordId ) {
 			if( ! ignoreMissingData ) {
 				for( var key in attrs ) {
 					if( _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
 				}
 			}
 
-			return whereQuery( _this._recordsById[ thisRecordId ], attrs );
+			return whereQuery.matches( _this._recordsById[ thisRecordId ], attrs );
 		} );
 	},
 
 	// Return the first model with matching attributes. Useful for simple cases
 	// of `find`.
-	findWhere : function( attrs, ignoreMissingData ) {
-		return this.where( attrs, true, ignoreMissingData );
+	findWhere : function( attrs, options ) {
+		options = _.defaults( {}, options, {
+			ignoreMissingData : false,
+		} );
+
+		return this.where( attrs, { first : true, ignoreMissingData : options.ignoreMissingData } );
 	},
 
 	pluck : function( propertyName ) {
