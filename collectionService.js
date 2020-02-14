@@ -287,16 +287,20 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	// Return records with matching attributes. Useful for simple cases of
-	// `filter`.
+	// `filter`. Unlike in underscore, if values of attrs is an array, then
+	// a record will be included in the return if the corresponding attribute
+	// on the record is included in the elements of attrs.
 	where : function( attrs, first, ignoreMissingData ) {
 		var _this = this;
 		if( _.isEmpty( attrs ) ) return first ? void 0 : [];
 		return this[ first ? 'find' : 'filter' ]( function( thisRecordId ) {
-			for( var key in attrs ) {
-				if( ! ignoreMissingData && _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
-				if( attrs[ key ] !== _this._recordsById[ thisRecordId ][ key ] ) return false;
+			if( ! ignoreMissingData ) {
+				for( var key in attrs ) {
+					if( _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
+				}
 			}
-			return true;
+
+			return whereQuery( _this._recordsById[ thisRecordId ], attrs );
 		} );
 	},
 
