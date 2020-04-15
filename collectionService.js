@@ -227,10 +227,14 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		options = _.defaults( {}, options, {
 			recordIds : this._recordIds,
-			fields : null
+			fields : null,
+			clone : false
 		} );
 
-		if( options.fields ) {
+		if( options.recordIds === this._recordIds && ! options.clone && ! options.fields ) {
+			// optimization for simplest case
+			return _.values( this._recordsById );
+		} else if( options.fields ) {
 			return _.map( options.recordIds, function( thisRecordId ) {
 				if( ! _this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
 			

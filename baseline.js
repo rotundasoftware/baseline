@@ -31,9 +31,16 @@ module.exports = Class.extend( {
 		}
 	},
 
-	// RESOLVE DEPENDENCIES IS DEPRECIATED. Just use Object.assign( obj, baseline.services ) instead.
-	resolveDependencies : function( obj ) {
-		Object.assign( obj, this.services )
+	toJSON() {
+		const json;
+
+		_.each( _this.services, function( thisService, thisServiceIdent ) {
+			if( _.isFunction( thisService.toJSON ) ) {
+				json[ thisServiceIdent ] = thisService.toJSON();
+			}
+		} );
+
+		return json;
 	}
 } );
 
