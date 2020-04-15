@@ -32,7 +32,7 @@ module.exports = Class.extend( {
 	},
 
 	toJSON() {
-		const json;
+		var json = {};
 
 		_.each( _this.services, function( thisService, thisServiceIdent ) {
 			if( _.isFunction( thisService.toJSON ) ) {
