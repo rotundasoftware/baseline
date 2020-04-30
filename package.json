@@ -12,7 +12,7 @@
     "matches-where-query": "^1.0.0",
     "class-con-leche": "^0.0.0",
     "es6-promise": "^4.1.1",
-    "jquery": "^2.1.4",
+    "jquery": "^3.5.0",
     "node-uuid": "^1.4.1",
     "steamer": "^1.3.0",
     "underscore": "^1.8.0"
