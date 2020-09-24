@@ -31,7 +31,7 @@ module.exports = Class.extend( {
 		}
 	},
 
-	toJSON() {
+	toJSON : function() {
 		var json = {};
 
 		_.each( this.services, function( thisService, thisServiceIdent ) {
