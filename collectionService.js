@@ -4,6 +4,7 @@ var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
 var $ = require( 'jquery' );
 var matchesWhereQuery = require( 'matches-where-query' );
+var immer = require( "immer" );
 
 require('es6-promise').polyfill();
 
@@ -120,8 +121,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		// let's keep it as is. (The alternative would be to force setting non-present fields through merge.)
 		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
-		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
-		else this._recordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
+		this._recordsById = immer.produce( this._recordsById, draftRecordsById => {
+			if( _.isUndefined( fieldValue ) ) delete draftRecordsById[ recordId ][ fieldName ];
+			else draftRecordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
+		} );
 
  		this.trigger( 'set', recordId, fieldName, fieldValue );
 	},
@@ -138,7 +141,11 @@ var CollectionService = module.exports = BaseService.extend( {
 			if( ! _this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
 		
 			_this._recordIds = _.without( _this._recordIds, recordId );
-			delete _this._recordsById[ recordId ];
+			
+			this._recordsById = immer.produce( this._recordsById, draftRecordsById => {
+				delete draftRecordsById[ thisRecordId ];					
+			} );
+
 			_this.length--;
 
 			_this.trigger( 'destroy', recordId, options );
@@ -180,7 +187,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.length = 0;
 		
 		this._recordIds = [];
-		this._recordsById = {};
+		this._recordsById = immer.produce( {}, draft => {} );
 		this._newRecordIds = [];
 	},
 
@@ -317,6 +324,11 @@ var CollectionService = module.exports = BaseService.extend( {
 		} else {
 			return fieldValue;
 		}
+		// if( fieldValue instanceof Object ) {
+		// 	return JSON.parse( JSON.stringify( original( castDraft( fieldValue ) ) ) );
+		// } else {
+		// 	return original( castDraft( fieldValue ) );
+		// }
 	},
 
 	_getUniqueId : function() {
@@ -373,16 +385,18 @@ var CollectionService = module.exports = BaseService.extend( {
 			throw new Error( 'Each dto must define a unique id.' );
 		}
 
-		// make sure the attributes we end up storing are copies, in case
-		// somebody is using the original newRecordDTOs.
-		var recordIsNew = ! this._recordsById[ recordId ];
-		if( recordIsNew ) {
-			this._recordsById[ recordId ] = {};
-			this._recordIds.push( recordId );
-			this.length++;
-		}
+		this._recordsById = immer.produce( this._recordsById, draftRecordsById => {
+			// make sure the attributes we end up storing are copies, in case
+			// somebody is using the original newRecordDTOs.
+			var recordIsNew = ! draftRecordsById[ recordId ];
+			if( recordIsNew ) {
+				draftRecordsById[ recordId ] = {};
+				this._recordIds.push( recordId );
+				this.length++;
+			}
 
-		_.extend( this._recordsById[ recordId ], dto );
+			_.extend( draftRecordsById[ recordId ], dto );			
+		} );
 	},
 
 	_sync : function( url, verb, payload, ajaxOptions ) {
