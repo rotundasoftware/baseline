@@ -384,11 +384,11 @@ var CollectionService = module.exports = BaseService.extend( {
 			this.length++;
 		}
 
-		for( attribute in dto ) {
-			if( _.isObject( dto[ attribute ] ) ){
-				this._recordsById[ recordId ][ attribute ] = _.clone( dto[ attribute ] );
-				this._deepFreeze( this._recordsById[ recordId ][ attribute ] );
-			} else this._recordsById[ recordId ][ attribute ] = dto[ attribute ];			
+		for( field in dto ) {
+			if( _.isObject( dto[ field ] ) ){
+				this._recordsById[ recordId ][ field ] = _.clone( dto[ field ] );
+				this._deepFreeze( this._recordsById[ recordId ][ field ] );
+			} else this._recordsById[ recordId ][ field ] = dto[ field ];			
 		}
 	},
 
