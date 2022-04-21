@@ -140,7 +140,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		// this.trigger( 'set:' + recordId, fieldName, fieldValue );
 	},
 
-	destroy : function( recordIdOrIds, options ) {
+	destroy : function( recordId, options ) {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
@@ -149,20 +149,18 @@ var CollectionService = module.exports = BaseService.extend( {
 		} );
 
 		var deleteLocally = function() {
-			_.each( _.isArray( recordIdOrIds ) ? recordIdOrIds : [ recordIdOrIds ], function( thisRecordId ) {
-				if( ! _this._recordsById[ thisRecordId ] ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
-			
-				_this._recordIds = _.without( _this._recordIds, thisRecordId );
-				delete _this._recordsById[ thisRecordId ];
-				_this.length--;
+			if( ! _this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
+		
+			_this._recordIds = _.without( _this._recordIds, recordId );
+			delete _this._recordsById[ recordId ];
+			_this.length--;
 
-				var params = {
-					collectionName : _this.collectionName,
-					recordId : thisRecordId
-				};
+			var params = {
+				collectionName : _this.collectionName,
+				recordId
+			}; // This var seems unneded
 
-				_this.trigger( 'destroy', thisRecordId, options );
-			} );
+			_this.trigger( 'destroy', recordId, options );
 		}
 
 		var recordIdsToDeleteRemotely = [];
