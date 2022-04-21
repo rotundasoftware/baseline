@@ -319,11 +319,6 @@ var CollectionService = module.exports = BaseService.extend( {
 		} else {
 			return fieldValue;
 		}
-		// if( fieldValue instanceof Object ) {
-		// 	return JSON.parse( JSON.stringify( original( castDraft( fieldValue ) ) ) );
-		// } else {
-		// 	return original( castDraft( fieldValue ) );
-		// }
 	},
 
 	_getUniqueId : function() {
