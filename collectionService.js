@@ -4,7 +4,6 @@ var Events = require( 'backbone-events-standalone' );
 var uuid = require( 'node-uuid' );
 var $ = require( 'jquery' );
 var matchesWhereQuery = require( 'matches-where-query' );
-var immer = require( "immer" );
 
 require('es6-promise').polyfill();
 
@@ -121,10 +120,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		// let's keep it as is. (The alternative would be to force setting non-present fields through merge.)
 		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
-		this._recordsById = immer.produce( this._recordsById, draftRecordsById => {
-			if( _.isUndefined( fieldValue ) ) delete draftRecordsById[ recordId ][ fieldName ];
-			else draftRecordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
-		} );
+		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
+		else this._recordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
+
+		if( _.isObject( this._recordsById[ recordId ][ fieldName ] ) ) this._deepFreeze( this._recordsById[ recordId ][ fieldName ] );
 
  		this.trigger( 'set', recordId, fieldName, fieldValue );
 	},
@@ -140,13 +139,9 @@ var CollectionService = module.exports = BaseService.extend( {
 		var deleteLocally = function() {
 			if( ! _this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
 		
-			_this._recordIds = _.without( _this._recordIds, recordId );
-			
-			this._recordsById = immer.produce( this._recordsById, draftRecordsById => {
-				delete draftRecordsById[ thisRecordId ];					
-			} );
-
-			_this.length--;
+			_this._recordIds = _.without( _this._recordIds, thisRecordId );
+					
+			delete this._recordsById[ thisRecordId ];					
 
 			_this.trigger( 'destroy', recordId, options );
 		}
@@ -187,7 +182,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.length = 0;
 		
 		this._recordIds = [];
-		this._recordsById = immer.produce( {}, draft => {} );
+		this._recordsById = {};
 		this._newRecordIds = [];
 	},
 
@@ -385,18 +380,41 @@ var CollectionService = module.exports = BaseService.extend( {
 			throw new Error( 'Each dto must define a unique id.' );
 		}
 
-		this._recordsById = immer.produce( this._recordsById, draftRecordsById => {
-			// make sure the attributes we end up storing are copies, in case
-			// somebody is using the original newRecordDTOs.
-			var recordIsNew = ! draftRecordsById[ recordId ];
-			if( recordIsNew ) {
-				draftRecordsById[ recordId ] = {};
-				this._recordIds.push( recordId );
-				this.length++;
-			}
+		// make sure the attributes we end up storing are copies, in case
+		// somebody is using the original newRecordDTOs.
+		var recordIsNew = ! this._recordsById[ recordId ];
+		if( recordIsNew ) {
+			this._recordsById[ recordId ] = {};
+			this._recordIds.push( recordId );
+			this.length++;
+		}
 
-			_.extend( draftRecordsById[ recordId ], dto );			
-		} );
+		for( attribute in dto ) {
+			if( _.isObject( dto[ attribute ] ) ){
+				this._recordsById[ recordId ][ attribute ] = _.clone( dto[ attribute ] );
+				this._deepFreeze( this._recordsById[ recordId ][ attribute ] );
+			} else this._recordsById[ recordId ][ attribute ] = dto[ attribute ];			
+		}
+	},
+
+	// From : https://github.com/jsdf/deep-freeze
+	_deepFreeze( obj ) {
+		Object.freeze( obj );
+	
+		var objIsFunction = typeof obj === "function";
+		var hasOwnProp = Object.prototype.hasOwnProperty;
+	
+		Object.getOwnPropertyNames( obj ).forEach( function ( property ) {
+			if ( hasOwnProp.call( obj, property )
+			&& ( objIsFunction ? property !== 'caller' && property !== 'callee' && property !== 'arguments' : true )
+			&& obj[ prop ] !== null
+			&& ( typeof obj[ property ] === "object" || typeof obj[ property ] === "function" )
+			&& !Object.isFrozen( obj[ property ] ) ) {
+				deepFreeze( obj[ property ] );
+			}
+		});
+		
+		return obj;
 	},
 
 	_sync : function( url, verb, payload, ajaxOptions ) {

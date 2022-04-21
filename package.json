@@ -11,7 +11,6 @@
     "backbone-events-standalone": "^0.2.1",
     "class-con-leche": "^0.0.0",
     "es6-promise": "^4.1.1",
-    "immer": "^9.0.12",
     "jquery": "^2.1.4",
     "matches-where-query": "^1.0.0",
     "node-uuid": "^1.4.1",
