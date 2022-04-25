@@ -50,11 +50,6 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		_.defaults( initialFieldValues, this.fields );
 
-		var params = {
-			collectionName : this.collectionName,
-			fieldValues : initialFieldValues
-		};
-
 		this.merge( [ initialFieldValues ] );
 
 		this.trigger( 'create', initialFieldValues, options );
@@ -128,19 +123,10 @@ var CollectionService = module.exports = BaseService.extend( {
 		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
 		else this._recordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
 
-		var params = {
-			collectionName : this.collectionName,
-			recordId : recordId,
-			fieldName : fieldName,
-			value : fieldValue
-		};
-
-		// this.trigger( 'operation', 'setField', params );
-		this.trigger( 'set', recordId, fieldName, fieldValue );
-		// this.trigger( 'set:' + recordId, fieldName, fieldValue );
+ 		this.trigger( 'set', recordId, fieldName, fieldValue );
 	},
 
-	destroy : function( recordIdOrIds, options ) {
+	destroy : function( recordId, options ) {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
@@ -149,33 +135,19 @@ var CollectionService = module.exports = BaseService.extend( {
 		} );
 
 		var deleteLocally = function() {
-			_.each( _.isArray( recordIdOrIds ) ? recordIdOrIds : [ recordIdOrIds ], function( thisRecordId ) {
-				if( ! _this._recordsById[ thisRecordId ] ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
-			
-				_this._recordIds = _.without( _this._recordIds, thisRecordId );
-				delete _this._recordsById[ thisRecordId ];
-				_this.length--;
+			if( ! _this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
+		
+			_this._recordIds = _.without( _this._recordIds, recordId );
+			delete _this._recordsById[ recordId ];
+			_this.length--;
 
-				var params = {
-					collectionName : _this.collectionName,
-					recordId : thisRecordId
-				};
-
-				_this.trigger( 'destroy', thisRecordId, options );
-			} );
+			_this.trigger( 'destroy', recordId, options );
 		}
 
-		var recordIdsToDeleteRemotely = [];
-		if( options.sync ) {
-			recordIdsToDeleteRemotely = _.filter( _.isArray( recordIdOrIds ) ? recordIdOrIds : [ recordIdOrIds ], function( thisRecordId ) {
-				return ! _this.isNew( thisRecordId );
-			} );
-		}
+		if( options.sync && ! _this.isNew( thisRecordId ) ) {
+			var url = this._getRESTEndpoint( 'delete', thisRecordId );
 
-		if( recordIdsToDeleteRemotely.length > 0 ) {
-			var url = this._getRESTEndpoint( 'delete', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : recordIdsToDeleteRemotely[0] );
-
-			return _this._sync( url, 'DELETE', recordIdsToDeleteRemotely.length > 1 ? recordIdsToDeleteRemotely : undefined, options.ajax ).then( function( result ) {
+			return _this._sync( url, 'DELETE', undefined, options.ajax ).then( function( result ) {
 				if( result.success ) deleteLocally();
 
 				return result;
