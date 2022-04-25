@@ -395,19 +395,12 @@ var CollectionService = module.exports = BaseService.extend( {
 	// From : https://github.com/jsdf/deep-freeze
 	_deepFreeze( obj ) {
 		Object.freeze( obj );
-	
-		var objIsFunction = typeof obj === "function";
-		var hasOwnProp = Object.prototype.hasOwnProperty;
-	
-		Object.getOwnPropertyNames( obj ).forEach( function ( property ) {
-			if ( hasOwnProp.call( obj, property )
-			&& ( objIsFunction ? property !== 'caller' && property !== 'callee' && property !== 'arguments' : true )
-			&& obj[ prop ] !== null
-			&& ( typeof obj[ property ] === "object" || typeof obj[ property ] === "function" )
-			&& !Object.isFrozen( obj[ property ] ) ) {
-				deepFreeze( obj[ property ] );
+
+		for( attribute in obj ) {
+			if ( obj[ prop ] !== null && typeof obj[ attribute ] === "object" && !Object.isFrozen( obj[ attribute ] ) ) {
+				deepFreeze( obj[ attribute ] );
 			}
-		});
+		};
 		
 		return obj;
 	},
