@@ -392,7 +392,6 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
-	// From : https://github.com/jsdf/deep-freeze
 	_deepFreeze( obj ) {
 		Object.freeze( obj );
 
