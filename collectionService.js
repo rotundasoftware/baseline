@@ -396,7 +396,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		Object.freeze( obj );
 
 		for( attribute in obj ) {
-			if ( obj[ prop ] !== null && typeof obj[ attribute ] === "object" && !Object.isFrozen( obj[ attribute ] ) ) {
+			if ( obj[ prop ] !== null && typeof obj[ attribute ] === "object" ) {
 				deepFreeze( obj[ attribute ] );
 			}
 		};
