@@ -5,7 +5,7 @@ var uuid = require( 'node-uuid' );
 var $ = require( 'jquery' );
 var matchesWhereQuery = require( 'matches-where-query' );
 
-require('es6-promise').polyfill();
+require( 'es6-promise' ).polyfill();
 
 var CollectionService = module.exports = BaseService.extend( {
 	initialize : function( options ) {
@@ -17,7 +17,7 @@ var CollectionService = module.exports = BaseService.extend( {
 					$.ajax( options ).done( function( data, textStatus, xhr ) {
 						resolve( { success : true, xhr : xhr } );
 					} ).fail( function( xhr, textStatus ) {
-						resolve( { success : false, xhr: xhr } );
+						resolve( { success : false, xhr : xhr } );
 					} );
 				} );
 			}
@@ -125,7 +125,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		if( _.isObject( this._recordsById[ recordId ][ fieldName ] ) ) this._deepFreeze( this._recordsById[ recordId ][ fieldName ] );
 
- 		this.trigger( 'set', recordId, fieldName, fieldValue );
+		this.trigger( 'set', recordId, fieldName, fieldValue );
 	},
 
 	destroy : function( recordId, options ) {
@@ -139,15 +139,15 @@ var CollectionService = module.exports = BaseService.extend( {
 		var deleteLocally = function() {
 			if( ! _this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
 		
-			_this._recordIds = _.without( _this._recordIds, thisRecordId );
-					
-			delete this._recordsById[ thisRecordId ];					
+			_this._recordIds = _.without( _this._recordIds, recordId );
+			delete _this._recordsById[ recordId ];
+			_this.length--;
 
 			_this.trigger( 'destroy', recordId, options );
-		}
+		};
 
-		if( options.sync && ! _this.isNew( thisRecordId ) ) {
-			var url = this._getRESTEndpoint( 'delete', thisRecordId );
+		if( options.sync && ! _this.isNew( recordId ) ) {
+			var url = this._getRESTEndpoint( 'delete', recordId );
 
 			return _this._sync( url, 'DELETE', undefined, options.ajax ).then( function( result ) {
 				if( result.success ) deleteLocally();
@@ -175,7 +175,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	},
 
 	isNew : function( recordId ) {
-		return _.contains( this._newRecordIds, recordId )
+		return _.contains( this._newRecordIds, recordId );
 	},
 
 	empty : function() {
@@ -275,7 +275,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		
 		options = _.defaults( {}, options, {
 			first : false,
-			ignoreMissingData : false,
+			ignoreMissingData : false
 		} );
 
 		if( _.isEmpty( attrs ) ) return options.first ? void 0 : [];
@@ -294,7 +294,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	// of `find`.
 	findWhere : function( attrs, options ) {
 		options = _.defaults( {}, options, {
-			ignoreMissingData : false,
+			ignoreMissingData : false
 		} );
 
 		return this.where( attrs, { first : true, ignoreMissingData : options.ignoreMissingData } );
@@ -384,22 +384,22 @@ var CollectionService = module.exports = BaseService.extend( {
 			this.length++;
 		}
 
-		for( field in dto ) {
-			if( _.isObject( dto[ field ] ) ){
+		for( const field in dto ) {
+			if( _.isObject( dto[ field ] ) ) {
 				this._recordsById[ recordId ][ field ] = _.clone( dto[ field ] );
 				this._deepFreeze( this._recordsById[ recordId ][ field ] );
-			} else this._recordsById[ recordId ][ field ] = dto[ field ];			
+			} else this._recordsById[ recordId ][ field ] = dto[ field ];
 		}
 	},
 
 	_deepFreeze( obj ) {
 		Object.freeze( obj );
 
-		for( attribute in obj ) {
-			if ( obj[ prop ] !== null && typeof obj[ attribute ] === "object" ) {
-				deepFreeze( obj[ attribute ] );
+		for( const attribute in obj ) {
+			if( obj[ attribute ] !== null && typeof obj[ attribute ] === 'object' ) {
+				this._deepFreeze( obj[ attribute ] );
 			}
-		};
+		}
 		
 		return obj;
 	},
