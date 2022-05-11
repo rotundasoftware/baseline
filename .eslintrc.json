@@ -1,0 +1,9 @@
+{
+	"extends" : "@rotundasoftware/eslint-config-rotundasoftware",
+	"plugins": [
+        "mocha"
+	],
+	"rules" : {
+        "mocha/no-exclusive-tests": "error"
+	}
+}

@@ -8,16 +8,16 @@ var matchesWhereQuery = require( 'matches-where-query' );
 require( 'es6-promise' ).polyfill();
 
 var CollectionService = module.exports = BaseService.extend( {
-	initialize : function( options ) {
+	initialize( options ) {
 		options = _.defaults( {}, options, {
 			idFieldName : 'id',
 			defaultAjaxErrorHandler : undefined,
-			ajax : function( options ) {
-				return new Promise( function( resolve, reject ) {
+			ajax( options ) {
+				return new Promise( function( resolve ) {
 					$.ajax( options ).done( function( data, textStatus, xhr ) {
-						resolve( { success : true, xhr : xhr } );
-					} ).fail( function( xhr, textStatus ) {
-						resolve( { success : false, xhr : xhr } );
+						resolve( { success : true, xhr } );
+					} ).fail( xhr => {
+						resolve( { success : false, xhr } );
 					} );
 				} );
 			}
@@ -37,7 +37,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		BaseService.prototype.initialize( options );
 	},
 
-	create : function( initialFieldValues, options ) {
+	create( initialFieldValues, options ) {
 		options = _.defaults( {}, options, { silent : false } );
 
 		if( ! initialFieldValues ) initialFieldValues = {};
@@ -59,11 +59,11 @@ var CollectionService = module.exports = BaseService.extend( {
 		return newRecordId;
 	},
 
-	id : function() {
+	id() {
 		return this.get( this._idFieldName );
 	},
 
-	get : function( recordId, fieldName, options ) {
+	get( recordId, fieldName, options ) {
 		options = Object.assign( {
 			clone : false
 		}, options );
@@ -78,7 +78,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		return fieldValue;
 	},
 
-	gets : function( recordId, fields, options ) {
+	gets( recordId, fields, options ) {
 		options = Object.assign( {
 			clone : false
 		}, options );
@@ -99,17 +99,18 @@ var CollectionService = module.exports = BaseService.extend( {
 		return values;
 	},
 
-	set : function( recordId, fieldName, fieldValue ) {
+	// eslint-disable-next-line no-unused-vars
+	set( recordId, fieldName, fieldValue ) {
 		this.rawSet.apply( this, arguments );
 	},
 
-	sets : function( recordId, fields ) {
+	sets( recordId, fields ) {
 		_.each( fields, function( thisFieldValue, thisFieldName ) {
 			this.set( recordId, thisFieldName, thisFieldValue );
 		}, this );
 	},
 
-	rawSet : function( recordId, fieldName, fieldValue ) {
+	rawSet( recordId, fieldName, fieldValue ) {
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 		
 		if( fieldName === this._idFieldName && this._recordsById[ recordId ][ fieldName ] !== fieldValue ) throw new Error( 'Changing the id field of an existing record is not supported.' );
@@ -118,7 +119,8 @@ var CollectionService = module.exports = BaseService.extend( {
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
 		// but jury is still out, so we will do it this way for now. we tried this more lax interpretation and doesn't seem to cause problems,
 		// let's keep it as is. (The alternative would be to force setting non-present fields through merge.)
-		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
+		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) )
+		// 	throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
 		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
 		else this._recordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
@@ -128,7 +130,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.trigger( 'set', recordId, fieldName, fieldValue );
 	},
 
-	destroy : function( recordId, options ) {
+	destroy( recordId, options ) {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
@@ -160,12 +162,12 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
-	ids : function() {
+	ids() {
 		// return a copy of the ids array
 		return this._recordIds.slice( 0 );
 	},
 
-	isPresent : function( recordId, fieldName ) {
+	isPresent( recordId, fieldName ) {
 		// fieldName is optional.. if not supplied function will return true iff recordId is present
 
 		if( _.isUndefined( this._recordsById[ recordId ] ) ) return false;
@@ -174,11 +176,11 @@ var CollectionService = module.exports = BaseService.extend( {
 		return true;
 	},
 
-	isNew : function( recordId ) {
+	isNew( recordId ) {
 		return _.contains( this._newRecordIds, recordId );
 	},
 
-	empty : function() {
+	empty() {
 		this.length = 0;
 		
 		this._recordIds = [];
@@ -186,7 +188,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		this._newRecordIds = [];
 	},
 
-	merge : function( newRecordDTOs ) {
+	merge( newRecordDTOs ) {
 		var _this = this;
 
 		if( ! _.isArray( newRecordDTOs ) ) newRecordDTOs = [ newRecordDTOs ];
@@ -196,7 +198,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		}, this );
 	},
 
-	toJSON : function( options ) {
+	toJSON( options ) {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
@@ -223,7 +225,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
-	fetch : function( recordId, options ) {
+	fetch( recordId, options ) {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
@@ -240,7 +242,7 @@ var CollectionService = module.exports = BaseService.extend( {
 		} );
 	},
 
-	save : function( recordId, options ) {
+	save( recordId, options ) {
 		var _this = this;
 
 		options = _.defaults( {}, options, {
@@ -270,7 +272,7 @@ var CollectionService = module.exports = BaseService.extend( {
 	// a record will be included in the return if the corresponding attribute
 	// on the record is included in the elements of attrs.
 
-	where : function( attrs, options ) {
+	where( attrs, options ) {
 		var _this = this;
 		
 		options = _.defaults( {}, options, {
@@ -282,7 +284,9 @@ var CollectionService = module.exports = BaseService.extend( {
 		return this[ options.first ? 'find' : 'filter' ]( function( thisRecordId ) {
 			if( ! options.ignoreMissingData ) {
 				for( var key in attrs ) {
-					if( _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
+					if( _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) {
+						throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
+					}
 				}
 			}
 
@@ -292,7 +296,7 @@ var CollectionService = module.exports = BaseService.extend( {
 
 	// Return the first model with matching attributes. Useful for simple cases
 	// of `find`.
-	findWhere : function( attrs, options ) {
+	findWhere( attrs, options ) {
 		options = _.defaults( {}, options, {
 			ignoreMissingData : false
 		} );
@@ -300,20 +304,20 @@ var CollectionService = module.exports = BaseService.extend( {
 		return this.where( attrs, { first : true, ignoreMissingData : options.ignoreMissingData } );
 	},
 
-	pluck : function( propertyName ) {
+	pluck( propertyName ) {
 		return _.pluck( this._recordsById, propertyName );
 	},
 
-	registerTapeOperation : function( operationName, tapeOperationDescriptor ) {
+	registerTapeOperation( operationName, tapeOperationDescriptor ) {
 		this.arbitrator.tapeOperations[ operationName ] = tapeOperationDescriptor.arbitrator;
 		this.tapeOperations[ operationName ] = tapeOperationDescriptor.client;
 	},
 
-	_cloneRecord : function( record ) {
+	_cloneRecord( record ) {
 		return JSON.parse( JSON.stringify( record ) );
 	},
 
-	_cloneFieldValue : function( fieldValue ) {
+	_cloneFieldValue( fieldValue ) {
 		if( fieldValue instanceof Object ) {
 			return JSON.parse( JSON.stringify( fieldValue ) );
 		} else {
@@ -321,11 +325,12 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
-	_getUniqueId : function() {
+	_getUniqueId() {
 		return uuid.v4();
 	},
 
-	_getRESTEndpoint : function( method, recordIdOrIds, variableParts ) {
+	_getRESTEndpoint( method, recordIdOrIds, variableParts ) {
+		// eslint-disable-next-line no-unused-vars
 		var _this = this;
 
 		if( _.isUndefined( variableParts ) ) variableParts = {};
@@ -348,13 +353,13 @@ var CollectionService = module.exports = BaseService.extend( {
 		endpoint = this._fillInVariablePartsOfRESTEndpoint( recordId, endpoint );
 
 		if( _.contains( [ 'update', 'delete', 'patch', 'get' ], method ) && ! _.isArray( recordIdOrIds ) ) {
-			endpoint = endpoint.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
+			endpoint = endpoint.replace( /([^/])$/, '$1/' ) + encodeURIComponent( recordId );
 		}
 
 		return endpoint;
 	},
 
-	_fillInVariablePartsOfRESTEndpoint : function( recordId, endpoint ) {
+	_fillInVariablePartsOfRESTEndpoint( recordId, endpoint ) {
 		var _this = this;
 
 		return endpoint.replace( /\/:(\w+)/g, function( match, fieldName ) {
@@ -362,13 +367,13 @@ var CollectionService = module.exports = BaseService.extend( {
 		} );
 	},
 
-	_recordToDTO : function( recordId, method ) {
+	_recordToDTO( recordId, method ) {
 		var dto = this.gets( recordId );
 		if( method === 'update' ) delete dto.id;
 		return dto;
 	},
 
-	_mergeDTO : function( dto ) {
+	_mergeDTO( dto ) {
 		var recordId = dto[ this._idFieldName ];
 
 		if( _.isUndefined( recordId ) ) {
@@ -404,12 +409,12 @@ var CollectionService = module.exports = BaseService.extend( {
 		return obj;
 	},
 
-	_sync : function( url, verb, payload, ajaxOptions ) {
+	_sync( url, verb, payload, ajaxOptions ) {
 		var options = _.defaults( {}, options );
 
 		// Default JSON-request options.
 		var params = {
-			url : url,
+			url,
 			type : verb,
 			dataType : 'json',
 			contentType : 'application/json',
