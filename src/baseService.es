@@ -1,4 +1,4 @@
-var Class = require( 'class-con-leche' );
+import Class from 'class-con-leche';
 
 module.exports = Class.extend( {
 	initialize() {

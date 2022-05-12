@@ -1,9 +1,9 @@
-var _ = require( 'underscore' );
-var Class = require( 'class-con-leche' );
+import _ from 'underscore';
+import Class from 'class-con-leche';
 
-module.exports = Class.extend( {
-	initialize : function( services ) {
-		var _this = this;
+export default Class.extend( {
+	initialize( services ) {
+		const _this = this;
 
 		this.services = services;
 
@@ -17,9 +17,9 @@ module.exports = Class.extend( {
 		} );
 	},
 
-	merge : function( data, options ) {
-		var options = _.extend( {}, { empty : false }, options );
-		var _this = this;
+	merge( data, defaultOptions ) {
+		const options = _.extend( {}, { empty : false }, defaultOptions );
+		const _this = this;
 
 		if( data ) {
 			_.each( data, function( thisServiceData, thisServiceIdent ) {
@@ -31,8 +31,8 @@ module.exports = Class.extend( {
 		}
 	},
 
-	toJSON : function() {
-		var json = {};
+	toJSON() {
+		const json = {};
 
 		_.each( this.services, function( thisService, thisServiceIdent ) {
 			if( _.isFunction( thisService.toJSON ) ) {
@@ -44,6 +44,7 @@ module.exports = Class.extend( {
 	}
 } );
 
+// eslint-disable-next-line no-unused-vars
 function _isServer() {
-	return( typeof window === 'undefined' );
+	return ( typeof window === 'undefined' );
 }
