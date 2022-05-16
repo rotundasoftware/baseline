@@ -4,7 +4,6 @@ import Class from 'class-con-leche';
 export default Class.extend( {
 	initialize( services ) {
 		this.services = services;
-		console.log( JSON.stringify( this.services ) );
 
 		// hook up dependencies
 		for( const thisServiceIdent in this.services ) {
