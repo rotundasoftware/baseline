@@ -3,42 +3,42 @@ import Class from 'class-con-leche';
 
 export default Class.extend( {
 	initialize( services ) {
-		const _this = this;
-
 		this.services = services;
+		console.log( JSON.stringify( this.services ) );
 
 		// hook up dependencies
-		_.each( this.services, function( thisService ) {
-			thisService.baseline = _this;
+		for( const thisServiceIdent in this.services ) {
+			this.services[ thisServiceIdent ].baseline = this;
 
-			_.each( _this.services, function( thisOtherService, thisOtherServiceIdent ) {
-				thisService.setDependency( thisOtherServiceIdent, thisOtherService );
-			} );
-		} );
+			for( const thisOtherServiceIdent in this.services ) {
+				this.services[ thisServiceIdent ].setDependency( thisOtherServiceIdent, this.services[ thisOtherServiceIdent ] );
+			}
+		}
 	},
 
-	merge( data, defaultOptions ) {
-		const options = _.extend( {}, { empty : false }, defaultOptions );
-		const _this = this;
+	merge( data, options ) {
+		options = _.extend( {}, { empty : false }, options );
 
 		if( data ) {
-			_.each( data, function( thisServiceData, thisServiceIdent ) {
-				if( _this.services[ thisServiceIdent ] && _.isFunction( _this.services[ thisServiceIdent ].merge ) ) {
-					if( options.empty ) _this.services[ thisServiceIdent ].empty();
-					_this.services[ thisServiceIdent ].merge( thisServiceData );
+			for( const thisServiceIdent in data ) {
+				if( this.services[ thisServiceIdent ] && _.isFunction( this.services[ thisServiceIdent ].merge ) ) {
+					if( options.empty ) this.services[ thisServiceIdent ].empty();
+					this.services[ thisServiceIdent ].merge( data[ thisServiceIdent ] );
 				}
-			} );
+			}
 		}
 	},
 
 	toJSON() {
 		const json = {};
 
-		_.each( this.services, function( thisService, thisServiceIdent ) {
+		for( const thisServiceIdent in this.services ) {
+			const thisService = this.services[ thisServiceIdent ];
+
 			if( _.isFunction( thisService.toJSON ) ) {
 				json[ thisServiceIdent ] = thisService.toJSON();
 			}
-		} );
+		}
 
 		return json;
 	}

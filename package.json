@@ -1,6 +1,6 @@
 {
   "name": "@rotundasoftware/baseline",
-  "version": "11.0.0-beta.1",
+  "version": "11.0.0-beta.5",
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
   "main": "./lib/index.js",
   "scripts": {
@@ -25,7 +25,6 @@
   "dependencies": {
     "backbone-events-standalone": "^0.2.1",
     "class-con-leche": "^0.0.0",
-    "es6-promise": "^4.1.1",
     "jquery": "^3.5.1",
     "matches-where-query": "^1.0.0",
     "node-uuid": "^1.4.1",
