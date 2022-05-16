@@ -1,23 +1,21 @@
-var _ = require( 'underscore' );
-var BaseService = require( './baseService' );
-var Events = require( 'backbone-events-standalone' );
-var uuid = require( 'node-uuid' );
-var $ = require( 'jquery' );
-var matchesWhereQuery = require( 'matches-where-query' );
+import _ from 'underscore';
+import BaseService from './baseService';
+import Events from 'backbone-events-standalone';
+import uuid from 'node-uuid';
+import $ from 'jquery';
+import matchesWhereQuery from 'matches-where-query';
 
-require( 'es6-promise' ).polyfill();
-
-var CollectionService = module.exports = BaseService.extend( {
-	initialize : function( options ) {
+const CollectionService = module.exports = BaseService.extend( {
+	initialize( options ) {
 		options = _.defaults( {}, options, {
 			idFieldName : 'id',
 			defaultAjaxErrorHandler : undefined,
-			ajax : function( options ) {
-				return new Promise( function( resolve, reject ) {
-					$.ajax( options ).done( function( data, textStatus, xhr ) {
-						resolve( { success : true, xhr : xhr } );
-					} ).fail( function( xhr, textStatus ) {
-						resolve( { success : false, xhr : xhr } );
+			ajax( options ) {
+				return new Promise( resolve => {
+					$.ajax( options ).done( ( data, textStatus, xhr ) => {
+						resolve( { success : true, xhr } );
+					} ).fail( xhr => {
+						resolve( { success : false, xhr } );
 					} );
 				} );
 			}
@@ -37,16 +35,17 @@ var CollectionService = module.exports = BaseService.extend( {
 		BaseService.prototype.initialize( options );
 	},
 
-	create : function( initialFieldValues, options ) {
+	create( initialFieldValues, options ) {
 		options = _.defaults( {}, options, { silent : false } );
 
 		if( ! initialFieldValues ) initialFieldValues = {};
 		else initialFieldValues = this._cloneRecord( initialFieldValues );
 
-		var newRecordId = initialFieldValues[ this._idFieldName ];
+		let newRecordId = initialFieldValues[ this._idFieldName ];
 
-		if( ! newRecordId )
+		if( ! newRecordId ) {
 			initialFieldValues[ this._idFieldName ] = newRecordId = this._getUniqueId();
+		}
 
 		_.defaults( initialFieldValues, this.fields );
 
@@ -59,18 +58,18 @@ var CollectionService = module.exports = BaseService.extend( {
 		return newRecordId;
 	},
 
-	id : function() {
+	id() {
 		return this.get( this._idFieldName );
 	},
 
-	get : function( recordId, fieldName, options ) {
+	get( recordId, fieldName, options ) {
 		options = Object.assign( {
 			clone : false
 		}, options );
 		
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 
-		var fieldValue = this._recordsById[ recordId ][ fieldName ];
+		let fieldValue = this._recordsById[ recordId ][ fieldName ];
 		if( options.clone ) fieldValue = this._cloneFieldValue( fieldValue );
 
 		if( _.isUndefined( fieldValue ) ) throw new Error( 'Field \'' + fieldName + '\' is not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
@@ -78,38 +77,37 @@ var CollectionService = module.exports = BaseService.extend( {
 		return fieldValue;
 	},
 
-	gets : function( recordId, fields, options ) {
+	gets( recordId, fields, options ) {
 		options = Object.assign( {
 			clone : false
 		}, options );
 
-		var _this = this;
-
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 
-		if( _.isUndefined( fields ) ) fields = _.keys( this._recordsById[ recordId ] );
+		if( _.isUndefined( fields ) ) fields = Object.keys( this._recordsById[ recordId ] );
 
-		if( ! _.isArray( fields ) ) fields = Array.prototype.slice.apply( arguments, [ 1 ] );
-		var values = {};
+		if( ! Array.isArray( fields ) ) fields = Array.prototype.slice.apply( arguments, [ 1 ] );
+		const values = {};
 
-		_.each( fields, function( thisFieldName ) {
-			values[ thisFieldName ] = _this.get( recordId, thisFieldName, { clone : options.clone } );
-		} );
+		for( const thisFieldName of fields ) {
+			values[ thisFieldName ] = this.get( recordId, thisFieldName, { clone : options.clone } );
+		}
 
 		return values;
 	},
 
-	set : function( recordId, fieldName, fieldValue ) {
+	// eslint-disable-next-line no-unused-vars
+	set( recordId, fieldName, fieldValue ) {
 		this.rawSet.apply( this, arguments );
 	},
 
-	sets : function( recordId, fields ) {
-		_.each( fields, function( thisFieldValue, thisFieldName ) {
-			this.set( recordId, thisFieldName, thisFieldValue );
-		}, this );
+	sets( recordId, fields ) {
+		for( const thisFieldName in fields ) {
+			this.set( recordId, thisFieldName, fields[ thisFieldName ] );
+		}
 	},
 
-	rawSet : function( recordId, fieldName, fieldValue ) {
+	rawSet( recordId, fieldName, fieldValue ) {
 		if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 		
 		if( fieldName === this._idFieldName && this._recordsById[ recordId ][ fieldName ] !== fieldValue ) throw new Error( 'Changing the id field of an existing record is not supported.' );
@@ -118,7 +116,8 @@ var CollectionService = module.exports = BaseService.extend( {
 		// in fields.. of course data will not be there (unless we initilize all fields to their default values, which might make sense,
 		// but jury is still out, so we will do it this way for now. we tried this more lax interpretation and doesn't seem to cause problems,
 		// let's keep it as is. (The alternative would be to force setting non-present fields through merge.)
-		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) ) throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
+		// if( _.isUndefined( this._recordsById[ recordId ][ fieldName ] ) )
+		// 	throw new Error( 'Field \'' + fieldName + '\' not present for record id ' + recordId + ' in table \'' + this.collectionName + '\'.' );
 
 		if( _.isUndefined( fieldValue ) ) delete this._recordsById[ recordId ][ fieldName ];
 		else this._recordsById[ recordId ][ fieldName ] = this._cloneFieldValue( fieldValue );
@@ -128,44 +127,41 @@ var CollectionService = module.exports = BaseService.extend( {
 		this.trigger( 'set', recordId, fieldName, fieldValue );
 	},
 
-	destroy : function( recordId, options ) {
-		var _this = this;
-
+	async destroy( recordId, options ) {
 		options = _.defaults( {}, options, {
 			sync : true,
 			ajax : {}
 		} );
 
-		var deleteLocally = function() {
-			if( ! _this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
+		const deleteLocally = () => {
+			if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
 		
-			_this._recordIds = _.without( _this._recordIds, recordId );
-			delete _this._recordsById[ recordId ];
-			_this.length--;
+			this._recordIds = _.without( this._recordIds, recordId );
+			delete this._recordsById[ recordId ];
+			this.length--;
 
-			_this.trigger( 'destroy', recordId, options );
+			this.trigger( 'destroy', recordId, options );
 		};
 
-		if( options.sync && ! _this.isNew( recordId ) ) {
-			var url = this._getRESTEndpoint( 'delete', recordId );
+		if( options.sync && ! this.isNew( recordId ) ) {
+			const url = this._getRESTEndpoint( 'delete', recordId );
 
-			return _this._sync( url, 'DELETE', undefined, options.ajax ).then( function( result ) {
-				if( result.success ) deleteLocally();
+			const result = await this._sync( url, 'DELETE', undefined, options.ajax );
+			if( result.success ) deleteLocally();
 
-				return result;
-			} );
+			return result;
 		} else {
 			deleteLocally();
 			return Promise.resolve( { success : true } );
 		}
 	},
 
-	ids : function() {
+	ids() {
 		// return a copy of the ids array
 		return this._recordIds.slice( 0 );
 	},
 
-	isPresent : function( recordId, fieldName ) {
+	isPresent( recordId, fieldName ) {
 		// fieldName is optional.. if not supplied function will return true iff recordId is present
 
 		if( _.isUndefined( this._recordsById[ recordId ] ) ) return false;
@@ -174,11 +170,11 @@ var CollectionService = module.exports = BaseService.extend( {
 		return true;
 	},
 
-	isNew : function( recordId ) {
-		return _.contains( this._newRecordIds, recordId );
+	isNew( recordId ) {
+		return this._newRecordIds.includes( recordId );
 	},
 
-	empty : function() {
+	empty() {
 		this.length = 0;
 		
 		this._recordIds = [];
@@ -186,19 +182,15 @@ var CollectionService = module.exports = BaseService.extend( {
 		this._newRecordIds = [];
 	},
 
-	merge : function( newRecordDTOs ) {
-		var _this = this;
+	merge( newRecordDTOs ) {
+		if( ! Array.isArray( newRecordDTOs ) ) newRecordDTOs = [ newRecordDTOs ];
 
-		if( ! _.isArray( newRecordDTOs ) ) newRecordDTOs = [ newRecordDTOs ];
-
-		_.each( newRecordDTOs, function( thisDto ) {
-			_this._mergeDTO( thisDto );
-		}, this );
+		for( const thisDto of newRecordDTOs ) {
+			this._mergeDTO( thisDto );
+		}
 	},
 
-	toJSON : function( options ) {
-		var _this = this;
-
+	toJSON( options ) {
 		options = _.defaults( {}, options, {
 			recordIds : this._recordIds,
 			fields : null,
@@ -207,62 +199,57 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		if( options.recordIds === this._recordIds && ! options.clone && ! options.fields ) {
 			// optimization for simplest case
-			return _.values( this._recordsById );
+			return Object.values( this._recordsById );
 		} else if( options.fields ) {
-			return _.map( options.recordIds, function( thisRecordId ) {
-				if( ! _this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+			return options.recordIds.map( thisRecordId => {
+				if( ! this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
 			
 				return this._cloneRecord( _.pick( this._recordsById[ thisRecordId ], options.fields ) );
-			}, this );
+			} );
 		} else {
-			return _.map( options.recordIds, function( thisRecordId ) {
-				if( ! _this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+			return options.recordIds.map( thisRecordId => {
+				if( ! this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
 		
 				return this._cloneRecord( this._recordsById[ thisRecordId ] );
-			}, this );
+			} );
 		}
 	},
 
-	fetch : function( recordId, options ) {
-		var _this = this;
-
+	async fetch( recordId, options ) {
 		options = _.defaults( {}, options, {
 			variablePartsOfEndpoint : {},
 			ajax : {}
 		} );
 
-		var url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
+		const url = this._getRESTEndpoint( 'get', recordId, options.variablePartsOfEndpoint );
 
-		return _this._sync( url, 'GET', null, options.ajax ).then( function( result ) {
-			if( result.success ) _this._mergeDTO( result.data );
+		const result = await this._sync( url, 'GET', null, options.ajax );
+		if( result.success ) this._mergeDTO( result.data );
 
-			return result;
-		} );
+		return result;
 	},
 
-	save : function( recordId, options ) {
-		var _this = this;
-
+	async save( recordId, options ) {
 		options = _.defaults( {}, options, {
 			merge : true,
 			ajax : {}
 		} );
 
-		var method = this.isNew( recordId ) ? 'create' : 'update';
-		var isUpdate = ! this.isNew( recordId );
-		var url = _this._getRESTEndpoint( method, recordId );
-		var dto = this._recordToDTO( recordId, method );
+		const method = this.isNew( recordId ) ? 'create' : 'update';
+		const isUpdate = ! this.isNew( recordId );
+		const url = this._getRESTEndpoint( method, recordId );
+		const dto = this._recordToDTO( recordId, method );
 
-		return _this._sync( url, isUpdate ? 'PUT' : 'POST', dto, options.ajax ).then( function( result ) {
-			if( result.success ) {
-				if( ! isUpdate ) _this._newRecordIds = _.without( _this._newRecordIds, recordId );
-				if( options.merge ) _this._mergeDTO( result.data );
+		const result = await this._sync( url, isUpdate ? 'PUT' : 'POST', dto, options.ajax );
+		
+		if( result.success ) {
+			if( ! isUpdate ) this._newRecordIds = _.without( this._newRecordIds, recordId );
+			if( options.merge ) this._mergeDTO( result.data );
 
-				_this.trigger( 'save', recordId, isUpdate, options );
-			}
+			this.trigger( 'save', recordId, isUpdate, options );
+		}
 
-			return result;
-		} );
+		return result;
 	},
 
 	// Return records with matching attributes. Useful for simple cases of
@@ -270,29 +257,32 @@ var CollectionService = module.exports = BaseService.extend( {
 	// a record will be included in the return if the corresponding attribute
 	// on the record is included in the elements of attrs.
 
-	where : function( attrs, options ) {
-		var _this = this;
-		
+	where( attrs, options ) {
 		options = _.defaults( {}, options, {
 			first : false,
 			ignoreMissingData : false
 		} );
 
-		if( _.isEmpty( attrs ) ) return options.first ? void 0 : [];
-		return this[ options.first ? 'find' : 'filter' ]( function( thisRecordId ) {
+		if( _.isEmpty( attrs ) ) {
+			return options.first ? void 0 : [];
+		}
+
+		return this[ options.first ? 'find' : 'filter' ]( thisRecordId => {
 			if( ! options.ignoreMissingData ) {
-				for( var key in attrs ) {
-					if( _.isUndefined( _this._recordsById[ thisRecordId ][ key ] ) ) throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + _this.collectionName + '\'.' );
+				for( const key in attrs ) {
+					if( _.isUndefined( this._recordsById[ thisRecordId ][ key ] ) ) {
+						throw new Error( 'Field \'' + key + '\' is not present for record id ' + thisRecordId + ' in table \'' + this.collectionName + '\'.' );
+					}
 				}
 			}
 
-			return matchesWhereQuery( _this._recordsById[ thisRecordId ], attrs );
+			return matchesWhereQuery( this._recordsById[ thisRecordId ], attrs );
 		} );
 	},
 
 	// Return the first model with matching attributes. Useful for simple cases
 	// of `find`.
-	findWhere : function( attrs, options ) {
+	findWhere( attrs, options ) {
 		options = _.defaults( {}, options, {
 			ignoreMissingData : false
 		} );
@@ -300,20 +290,15 @@ var CollectionService = module.exports = BaseService.extend( {
 		return this.where( attrs, { first : true, ignoreMissingData : options.ignoreMissingData } );
 	},
 
-	pluck : function( propertyName ) {
+	pluck( propertyName ) {
 		return _.pluck( this._recordsById, propertyName );
 	},
 
-	registerTapeOperation : function( operationName, tapeOperationDescriptor ) {
-		this.arbitrator.tapeOperations[ operationName ] = tapeOperationDescriptor.arbitrator;
-		this.tapeOperations[ operationName ] = tapeOperationDescriptor.client;
-	},
-
-	_cloneRecord : function( record ) {
+	_cloneRecord( record ) {
 		return JSON.parse( JSON.stringify( record ) );
 	},
 
-	_cloneFieldValue : function( fieldValue ) {
+	_cloneFieldValue( fieldValue ) {
 		if( fieldValue instanceof Object ) {
 			return JSON.parse( JSON.stringify( fieldValue ) );
 		} else {
@@ -321,55 +306,52 @@ var CollectionService = module.exports = BaseService.extend( {
 		}
 	},
 
-	_getUniqueId : function() {
+	_getUniqueId() {
 		return uuid.v4();
 	},
 
-	_getRESTEndpoint : function( method, recordIdOrIds, variableParts ) {
-		var _this = this;
-
+	_getRESTEndpoint( method, recordIdOrIds, variableParts ) {
+		// eslint-disable-next-line no-unused-vars
 		if( _.isUndefined( variableParts ) ) variableParts = {};
 
-		var base = this.url;
+		let base = this.url;
 		if( _.isFunction( base ) ) base = base.call( this );
 
 		if( ! base ) throw new Error( 'A "url" property or function must be specified' );
 
-		var endpoint = base;
-		var recordId = recordIdOrIds;
+		let endpoint = base;
+		const recordId = recordIdOrIds;
 
 		// if we have any pre-supplied variable parts, fill those in. necessary for cases
 		// like fetching a record when we have no existing information in baseline regarding,
 		// that record, so we can't build the url internally.
-		_.each( variableParts, function( thisVariablePartValue, thisVariablePartKey ) {
-			endpoint = endpoint.replace( ':' + thisVariablePartKey, thisVariablePartValue );
-		} );
+		for( const thisVariablePartKey in variableParts ) {
+			endpoint = endpoint.replace( ':' + thisVariablePartKey, variableParts[ thisVariablePartKey ] );
+		}
 
 		endpoint = this._fillInVariablePartsOfRESTEndpoint( recordId, endpoint );
 
-		if( _.contains( [ 'update', 'delete', 'patch', 'get' ], method ) && ! _.isArray( recordIdOrIds ) ) {
-			endpoint = endpoint.replace( /([^\/])$/, '$1/' ) + encodeURIComponent( recordId );
+		if( [ 'update', 'delete', 'patch', 'get' ].includes( method ) && ! Array.isArray( recordIdOrIds ) ) {
+			endpoint = endpoint.replace( /([^/])$/, '$1/' ) + encodeURIComponent( recordId );
 		}
 
 		return endpoint;
 	},
 
-	_fillInVariablePartsOfRESTEndpoint : function( recordId, endpoint ) {
-		var _this = this;
-
-		return endpoint.replace( /\/:(\w+)/g, function( match, fieldName ) {
-			return '/' + _this.get( recordId, fieldName );
+	_fillInVariablePartsOfRESTEndpoint( recordId, endpoint ) {
+		return endpoint.replace( /\/:(\w+)/g, ( match, fieldName ) => {
+			return '/' + this.get( recordId, fieldName );
 		} );
 	},
 
-	_recordToDTO : function( recordId, method ) {
-		var dto = this.gets( recordId );
+	_recordToDTO( recordId, method ) {
+		const dto = this.gets( recordId );
 		if( method === 'update' ) delete dto.id;
 		return dto;
 	},
 
-	_mergeDTO : function( dto ) {
-		var recordId = dto[ this._idFieldName ];
+	_mergeDTO( dto ) {
+		const recordId = dto[ this._idFieldName ];
 
 		if( _.isUndefined( recordId ) ) {
 			throw new Error( 'Each dto must define a unique id.' );
@@ -377,7 +359,8 @@ var CollectionService = module.exports = BaseService.extend( {
 
 		// make sure the attributes we end up storing are copies, in case
 		// somebody is using the original newRecordDTOs.
-		var recordIsNew = ! this._recordsById[ recordId ];
+		const recordIsNew = ! this._recordsById[ recordId ];
+
 		if( recordIsNew ) {
 			this._recordsById[ recordId ] = {};
 			this._recordIds.push( recordId );
@@ -404,12 +387,12 @@ var CollectionService = module.exports = BaseService.extend( {
 		return obj;
 	},
 
-	_sync : function( url, verb, payload, ajaxOptions ) {
-		var options = _.defaults( {}, options );
+	_sync( url, verb, payload, ajaxOptions ) {
+		const options = _.defaults( {}, options );
 
 		// Default JSON-request options.
-		var params = {
-			url : url,
+		const params = {
+			url,
 			type : verb,
 			dataType : 'json',
 			contentType : 'application/json',
@@ -422,7 +405,7 @@ var CollectionService = module.exports = BaseService.extend( {
 } );
 
 // Underscore methods that we want to implement for each table.
-var underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
+const underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
 	'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
 	'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
 	'max', 'min', 'sortedIndex', 'size', 'first', 'head', 'take',
@@ -430,25 +413,24 @@ var underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce'
 	'lastIndexOf', 'isEmpty' ];
 
 // Mix in each Underscore method as a proxy to _recordIds.
-_.each( underscoreTableMethodNames, function( thisMethodName ) {
-	CollectionService.prototype[ thisMethodName ] = function() {
-		var args = Array.prototype.slice.call( arguments );
+for( const thisMethodName of underscoreTableMethodNames ) {
+	CollectionService.prototype[ thisMethodName ] = () => {
+		const args = Array.prototype.slice.call( arguments );
 		args.unshift( this.ids() );
 		return _[ thisMethodName ].apply( _, args );
 	};
-} );
+}
 
 // Underscore methods that take a property name as an argument.
-var attributeMethods = [ 'groupBy', 'countBy' ]; // used to proxy sortBy, but unclear on use case here
+const attributeMethods = [ 'groupBy', 'countBy' ]; // used to proxy sortBy, but unclear on use case here
 
 // Use attributes instead of properties.
-_.each( attributeMethods, function( method ) {
-	CollectionService.prototype[ method ] = function( value, context ) {
-		var _this = this;
-		var iterator = _.isFunction( value ) ? value : function( thisRecordId ) {
-			return _this._recordsById[ thisRecordId ][ value ];
+for( const method of attributeMethods ) {
+	CollectionService.prototype[ method ] = ( value, context ) => {
+		const iterator = _.isFunction( value ) ? value : thisRecordId => {
+			return this._recordsById[ thisRecordId ][ value ];
 		};
 		
 		return _[ method ]( this._recordIds, iterator, context );
 	};
-} );
+}
