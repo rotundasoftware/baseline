@@ -32,6 +32,22 @@ const CollectionService = module.exports = BaseService.extend( {
 
 		Events.mixin( this );
 
+		// Underscore methods that take a property name as an argument.
+		const attributeMethods = [ 'groupBy', 'countBy' ]; // used to proxy sortBy, but unclear on use case here
+
+		// Use attributes instead of properties.
+		for( const method of attributeMethods ) {
+			CollectionService.prototype[ method ] = ( value, context ) => {
+				const iterator = _.isFunction( value ) ? value : thisRecordId => {
+					return this._recordsById[ thisRecordId ][ value ];
+				};
+				
+				return _[ method ]( this._recordIds, iterator, context );
+			};
+		}
+
+		this._setupUnderscoreProxy();
+
 		BaseService.prototype.initialize( options );
 	},
 
@@ -401,36 +417,24 @@ const CollectionService = module.exports = BaseService.extend( {
 
 		// Make the request, allowing the user to override any Ajax options.
 		return this._ajax( _.extend( params, ajaxOptions ) );
+	},
+
+	_setupUnderscoreProxy() {
+		// Underscore methods that we want to implement for each table.
+		const underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
+			'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
+			'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
+			'max', 'min', 'sortedIndex', 'size', 'first', 'head', 'take',
+			'initial', 'rest', 'tail', 'drop', 'last', 'without', 'indexOf', 'shuffle',
+			'lastIndexOf', 'isEmpty' ];
+
+		// Mix in each Underscore method as a proxy to _recordIds.
+		for( const thisMethodName of underscoreTableMethodNames ) {
+			CollectionService.prototype[ thisMethodName ] = function() {
+				const args = Array.prototype.slice.call( arguments );
+				args.unshift( this.ids() );
+				return _[ thisMethodName ].apply( _, args );
+			};
+		}
 	}
 } );
-
-// Underscore methods that we want to implement for each table.
-const underscoreTableMethodNames = [ 'forEach', 'each', 'map', 'collect', 'reduce', 'foldl',
-	'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',
-	'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',
-	'max', 'min', 'sortedIndex', 'size', 'first', 'head', 'take',
-	'initial', 'rest', 'tail', 'drop', 'last', 'without', 'indexOf', 'shuffle',
-	'lastIndexOf', 'isEmpty' ];
-
-// Mix in each Underscore method as a proxy to _recordIds.
-for( const thisMethodName of underscoreTableMethodNames ) {
-	CollectionService.prototype[ thisMethodName ] = () => {
-		const args = Array.prototype.slice.call( arguments );
-		args.unshift( this.ids() );
-		return _[ thisMethodName ].apply( _, args );
-	};
-}
-
-// Underscore methods that take a property name as an argument.
-const attributeMethods = [ 'groupBy', 'countBy' ]; // used to proxy sortBy, but unclear on use case here
-
-// Use attributes instead of properties.
-for( const method of attributeMethods ) {
-	CollectionService.prototype[ method ] = ( value, context ) => {
-		const iterator = _.isFunction( value ) ? value : thisRecordId => {
-			return this._recordsById[ thisRecordId ][ value ];
-		};
-		
-		return _[ method ]( this._recordIds, iterator, context );
-	};
-}

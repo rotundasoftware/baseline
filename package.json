@@ -2,25 +2,12 @@
   "name": "@rotundasoftware/baseline",
   "version": "11.0.0",
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
-  "main": "./lib/index.js",
+  "main": "./baseline.es",
   "scripts": {
-    "prepublishOnly": "npm install --only=dev && babel src -d lib",
     "test": "echo \"Error: no test specified\" && exit 1",
     "eslint": "eslint --ext '.es' .",
     "eslint:strict": "eslint --ext '.es' . --max-warnings=0",
     "prepush": "npm run eslint:strict"
-  },
-  "babel": {
-    "presets": [
-      "@babel/preset-env"
-    ]
-  },
-  "devDependencies": {
-    "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.9.6",
-    "@babel/preset-env": "^7.9.6",
-    "chai": "^4.2.0",
-    "mocha": "^6.2.0"
   },
   "dependencies": {
     "backbone-events-standalone": "^0.2.1",
