@@ -1,4 +1,4 @@
-# baseline.js
+# @rotundasoftware/baseline
 
 basline.js is a small library that organizes application logic and data in node.js web applications into interdependent services that can be used both on the client and the server. It provides a small, simple, in-memory data store to organize and access data on the client. The same in-memory database and logic can also be used on the server side.
 
