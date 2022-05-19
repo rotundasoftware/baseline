@@ -1,6 +1,6 @@
 {
   "name": "@rotundasoftware/baseline",
-  "version": "11.0.0",
+  "version": "11.1.3",
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
   "main": "./baseline.es",
   "scripts": {
