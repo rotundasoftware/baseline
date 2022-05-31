@@ -1,4 +1,4 @@
-# @rotundasoftware/baseline
+# baseline
 
 baseline is a minimalist framework for organizing and executing domain-specific logic in memory, completely free of external dependencies.
 
