@@ -1,7 +1,7 @@
 # baseline
 
-baseline is a minimalist framework for organizing and executing domain-specific logic in memory, completely free of external dependencies.
+baseline is a minimalist framework to share domain-specific logic between the client and the server in full stack JavaScript applications.
 
-A baseline instance may be used in the browser to give applications an unprecedented ability to execute domain-specific logic in real time, and may also be used in the backend as the domain layer of a [onion style architecture](https://www.codeguru.com/csharp/understanding-onion-architecture/). The result is a simple, completely isomorphic JavaScript execution environment.
+Use baseline in the browser to enable client-side applications to execute domain-specific logic at blazing speeds, and in the backend as the domain layer of an [onion style architecture](https://www.codeguru.com/csharp/understanding-onion-architecture/).
 
-Interested in learning more? At [Rotunda Software](https://www.rotundasoftware.com/), baseline is a centerpiece of applications that support over a million users. We're actively looking for somebody to help explore this frontier and document our work. If that kind of adventure sounds appealing to you, please put your name in the hat by applying for an [open position](https://www.rotundasoftware.com/careers).
+Interested in pushing boundaries with isomorphic JavaScript? At Rotunda Software, baseline [is a centerpiece](https://www.rotundasoftware.com/blog/rotunda/baseline?r=1) of applications that support over a million users, and we're actively looking to join forces with like-minded adventurers. Please get in touc by taking a few minutes to apply for one of our [open position](https://www.rotundasoftware.com/careers).
