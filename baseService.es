@@ -1,6 +1,6 @@
 import Class from 'class-con-leche';
 
-module.exports = Class.extend( {
+export default Class.extend( {
 	initialize() {
 
 	},

@@ -5,7 +5,7 @@ import uuid from 'node-uuid';
 import $ from 'jquery';
 import matchesWhereQuery from 'matches-where-query';
 
-const CollectionService = module.exports = BaseService.extend( {
+const CollectionService = BaseService.extend( {
 	initialize( options ) {
 		options = _.defaults( {}, options, {
 			idFieldName : 'id',
@@ -438,3 +438,5 @@ const CollectionService = module.exports = BaseService.extend( {
 		}
 	}
 } );
+
+export default CollectionService;
