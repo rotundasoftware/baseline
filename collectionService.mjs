@@ -1,11 +1,12 @@
 import _ from 'underscore';
-import BaseService from './baseService';
 import Events from 'backbone-events-standalone';
 import uuid from 'node-uuid';
 import $ from 'jquery';
 import matchesWhereQuery from 'matches-where-query';
 
-const CollectionService = module.exports = BaseService.extend( {
+import BaseService from './baseService.mjs';
+
+const CollectionService = BaseService.extend( {
 	initialize( options ) {
 		options = _.defaults( {}, options, {
 			idFieldName : 'id',
@@ -438,3 +439,5 @@ const CollectionService = module.exports = BaseService.extend( {
 		}
 	}
 } );
+
+export default CollectionService;

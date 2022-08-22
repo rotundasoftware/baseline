@@ -1,6 +1,6 @@
 import Class from 'class-con-leche';
 
-module.exports = Class.extend( {
+const BaseService = Class.extend( {
 	initialize() {
 
 	},
@@ -22,3 +22,5 @@ module.exports = Class.extend( {
 		return ( typeof window === 'undefined' );
 	}
 } );
+
+export default BaseService;
