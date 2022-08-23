@@ -70,7 +70,7 @@ const CollectionService = module.exports = BaseService.extend( {
 
 		_.defaults( initialFieldValues, this.fields );
 
-		this.merge( [ initialFieldValues ] );
+		this._mergeDTO( initialFieldValues );
 
 		this.trigger( 'create', initialFieldValues, options );
 
