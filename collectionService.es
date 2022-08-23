@@ -61,6 +61,11 @@ const CollectionService = module.exports = BaseService.extend( {
 
 		if( ! newRecordId ) {
 			initialFieldValues[ this._idFieldName ] = newRecordId = this._getUniqueId();
+		} else {
+			// ensure our provided id is unique. don't want to be writing over other records, clearly.
+			if( this._recordsById[ newRecordId ] ) {
+				throw new Error( 'Attempt to create duplicate record id ' + newRecordId + ' in table ' + this.collectionName );
+			}
 		}
 
 		_.defaults( initialFieldValues, this.fields );
