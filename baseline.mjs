@@ -1,7 +1,7 @@
 import _ from 'underscore';
 import Class from 'class-con-leche';
 
-export default Class.extend( {
+const Baseline = Class.extend( {
 	initialize( services ) {
 		this.services = services;
 
@@ -47,3 +47,5 @@ export default Class.extend( {
 function _isServer() {
 	return ( typeof window === 'undefined' );
 }
+
+export default Baseline;
