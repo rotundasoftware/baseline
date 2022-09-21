@@ -4,8 +4,8 @@
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
   "exports": {
     ".": "./baseline.mjs",
-    "./baseService": "./baseService.mjs",
-    "./collectionService": "./collectionService.mjs/"
+    "./baseService.mjs": "./baseService.mjs",
+    "./collectionService.mjs": "./collectionService.mjs"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
