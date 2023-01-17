@@ -409,9 +409,7 @@ const CollectionService = BaseService.extend( {
 		return obj;
 	},
 
-	_sync( url, verb, payload, ajaxOptions ) {
-		const options = _.defaults( {}, options );
-
+	_sync( url, verb, payload, ajaxOptions = {} ) {
 		// Default JSON-request options.
 		const params = {
 			url,
