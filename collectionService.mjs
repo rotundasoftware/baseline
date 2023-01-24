@@ -156,7 +156,7 @@ const CollectionService = BaseService.extend( {
 		} );
 
 		const deleteLocally = () => {
-			if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present.' );
+			if( ! this._recordsById[ recordId ] ) throw new Error( 'Record id ' + recordId + ' is not present in table \'' + this.collectionName + '\'.' );
 		
 			this._recordIds = _.without( this._recordIds, recordId );
 			delete this._recordsById[ recordId ];
@@ -224,13 +224,13 @@ const CollectionService = BaseService.extend( {
 			return Object.values( this._recordsById );
 		} else if( options.fields ) {
 			return options.recordIds.map( thisRecordId => {
-				if( ! this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+				if( ! this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present in table \'' + this.collectionName + '\'.' );
 			
 				return this._cloneRecord( _.pick( this._recordsById[ thisRecordId ], options.fields ) );
 			} );
 		} else {
 			return options.recordIds.map( thisRecordId => {
-				if( ! this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present.' );
+				if( ! this.isPresent( thisRecordId ) ) throw new Error( 'Record id ' + thisRecordId + ' is not present in table \'' + this.collectionName + '\'.' );
 		
 				return this._cloneRecord( this._recordsById[ thisRecordId ] );
 			} );
