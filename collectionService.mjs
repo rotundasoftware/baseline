@@ -1,6 +1,6 @@
 import _ from 'underscore';
 import Events from 'backbone-events-standalone';
-import uuid from 'node-uuid';
+import uuid from 'uuid-v4';
 import $ from 'jquery';
 import matchesWhereQuery from 'matches-where-query';
 
@@ -329,7 +329,7 @@ const CollectionService = BaseService.extend( {
 	},
 
 	_getUniqueId() {
-		return uuid.v4();
+		return uuid();
 	},
 
 	_getRESTEndpoint( method, recordIdOrIds, variableParts ) {
