@@ -286,7 +286,7 @@ const CollectionService = BaseService.extend( {
 		} );
 
 		if( _.isEmpty( attrs ) ) {
-			return options.first ? _.first( this._recordsById ) : this._recordsById;
+			return options.first ? _.first( this.ids() ) : this.ids();
 		}
 
 		return this[ options.first ? 'find' : 'filter' ]( thisRecordId => {
