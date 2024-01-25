@@ -14,13 +14,13 @@
     "prepush": "npm run eslint:strict"
   },
   "dependencies": {
-    "@rotundasoftware/steamer": "^2.0.0",
+    "@rotundasoftware/steamer": "^2.0.2",
     "backbone-events-standalone": "^0.2.1",
     "class-con-leche": "^0.0.0",
     "jquery": "^3.5.1",
     "matches-where-query": "^2.0.1",
     "uuid-v4": "^0.1.0",
-    "underscore": "^1.9.1"
+    "underscore": "^1.13.6"
   },
   "author": "Rotunda Software",
   "license": "MIT"
