@@ -2,11 +2,6 @@
  * This class defines the methods neeeded to implement a CRUD strategy.
  */
 export default class BaseStrategy {
-	constructor() {
-		// Prevent instantiation of this abstract class
-		if( this.constructor === BaseStrategy ) throw new Error( 'Cannot instantiate abstract class: BaseStrategy' );
-	}
-
 	// eslint-disable-next-line no-unused-vars
 	async fetch( id, fields, entity ) {
 		throw new Error( 'Method not implemented: fetch' );
