@@ -1,6 +1,6 @@
 {
   "name": "@rotundasoftware/baseline",
-  "version": "13.0.10",
+  "version": "14.0.0",
   "description": "Share code and data between the client and the server in full stack JavaScript applications.",
   "exports": {
     ".": "./index.mjs"
@@ -18,7 +18,7 @@
     "escape-string-regexp": "^1.0.5"
   },
   "devDependencies": {
-		"@rotundasoftware/eslint-config-rotundasoftware": "^4.1.2",
+    "@rotundasoftware/eslint-config-rotundasoftware": "^4.1.2",
     "eslint": "^8.16.0"
   },
   "author": "Rotunda Software",
