@@ -1,51 +1,58 @@
-import _ from 'underscore';
-import Class from 'class-con-leche';
+import assertType from '@rotundasoftware/assert-type';
 
-const Baseline = Class.extend( {
-	initialize( services ) {
-		this.services = services;
+export default class Baseline {
+	#services = {};
+	#data = {};
 
-		// hook up dependencies
-		for( const thisServiceIdent in this.services ) {
-			this.services[ thisServiceIdent ].baseline = this;
+	constructor( services = {} ) {
+		assertType( { services }, 'object' );
 
-			for( const thisOtherServiceIdent in this.services ) {
-				this.services[ thisServiceIdent ].setDependency( thisOtherServiceIdent, this.services[ thisOtherServiceIdent ] );
-			}
-		}
-	},
-
-	merge( data, options ) {
-		options = _.extend( {}, { empty : false }, options );
-
-		if( data ) {
-			for( const thisServiceIdent in data ) {
-				if( this.services[ thisServiceIdent ] && _.isFunction( this.services[ thisServiceIdent ].merge ) ) {
-					if( options.empty ) this.services[ thisServiceIdent ].empty();
-					this.services[ thisServiceIdent ].merge( data[ thisServiceIdent ] );
-				}
-			}
-		}
-	},
-
-	toJSON() {
-		const json = {};
-
-		for( const thisServiceIdent in this.services ) {
-			const thisService = this.services[ thisServiceIdent ];
-
-			if( _.isFunction( thisService.toJSON ) ) {
-				json[ thisServiceIdent ] = thisService.toJSON();
-			}
-		}
-
-		return json;
+		Object.values( services ).forEach( service => service.setBaseline( this ) );
+		Object.assign( this, services );
+		this.#services = services;
 	}
-} );
 
-// eslint-disable-next-line no-unused-vars
-function _isServer() {
-	return ( typeof window === 'undefined' );
+	merge( data ) {
+		assertType( { data }, 'object' );
+
+		Object.keys( data ).forEach( key => {
+			if( this.#services[ key ] ) {
+				this.#services[ key ].merge( data[ key ] );
+			} else {
+				this.#data[ key ] = data[ key ];
+			}
+		} );
+	}
+
+	empty() {
+		this.#services.forEach( service => service.empty() );
+		this.#data = {};
+	}
+
+	hasKey( key ) {
+		assertType( { key }, 'string' );
+
+		try {
+			this.get( key );
+			return true;
+		} catch( err ) {
+			return false;
+		}
+	}
+
+	hasKeys( keys ) {
+		assertType( { keys }, 'array' );
+
+		return keys.every( key => this.hasKey( key ) );
+	}
+
+	get( key ) {
+		assertType( { key }, 'string' );
+
+		if( key in this.#data ) {
+			return this.#data[ key ];
+		} else {
+			throw new Error( `Key "${ key }" not found in Baseline store` );
+		}
+	}
 }
-
-export default Baseline;
