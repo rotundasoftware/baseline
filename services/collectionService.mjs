@@ -12,7 +12,6 @@ import CollectionSorter from './collectionSorter.mjs';
  */
 class CollectionService extends BaseService {
 	static entity = null;
-	static underscoreProxiedMethods = [ 'each', 'map', 'reduce', 'find', 'filter', 'reject', 'every', 'some', 'first', 'chain' ];
 	static proxiedMethods = [ 'get', 'fetch', 'upsert', 'destroy', 'isPresent' ];
 
 	#records = [];
@@ -34,7 +33,6 @@ class CollectionService extends BaseService {
 
 		assertType( { crudStrategy, options }, 'object' );
 		assertType( { entity : this.constructor.entity }, 'string' );
-		assertType( { underscoreProxiedMethods : this.constructor.underscoreProxiedMethods }, 'array' );
 
 		const { throwOnCrudFailure = true } = options;
 
@@ -42,10 +40,6 @@ class CollectionService extends BaseService {
 
 		this._crudStrategy = crudStrategy;
 		this.#throwOnCrudFailure = throwOnCrudFailure;
-
-		this.constructor.underscoreProxiedMethods.forEach( method => {
-			this[ method ] = ( ...args ) => _[ method ]( Object.keys( this.#records ), ...args );
-		} );
 
 		this.#collectionFilter = new CollectionFilter();
 		this.#collectionSorter = new CollectionSorter();
@@ -154,7 +148,7 @@ class CollectionService extends BaseService {
 		assertType( { ignoreMissingFields }, 'boolean' );
 
 		const fields = Object.keys( attrs ).concat( 'id' );
-		const records = this.chain()
+		const records = _.chain( this.ids() )
 			.map( recordId => ignoreMissingFields ? this.#records[ recordId ] : this.get( recordId, fields ) )
 			.filter( record => matchesWhereQuery( record, attrs ) )
 			.pluck( 'id' )
@@ -178,7 +172,7 @@ class CollectionService extends BaseService {
 		assertType( { ignoreMissingFields }, 'boolean' );
 
 		const fields = Object.keys( attrs ).concat( 'id' );
-		const record = this.chain()
+		const record = _.chain( this.ids() )
 			.map( recordId => ignoreMissingFields ? this.#records[ recordId ] : this.get( recordId, fields ) )
 			.find( record => matchesWhereQuery( record, attrs ) )
 			.value();
@@ -194,7 +188,7 @@ class CollectionService extends BaseService {
 	pluck( field ) {
 		assertType( { field }, 'string' );
 
-		const values = this.chain()
+		const values = _.chain( this.ids() )
 			.map( recordId => this.get( recordId, field ) )
 			.value();
 
