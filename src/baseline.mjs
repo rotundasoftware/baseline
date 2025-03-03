@@ -35,7 +35,7 @@ export default class Baseline {
 		try {
 			this.get( key );
 			return true;
-		} catch( err ) {
+		} catch{
 			return false;
 		}
 	}

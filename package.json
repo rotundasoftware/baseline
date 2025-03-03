@@ -6,20 +6,18 @@
     ".": "./index.mjs"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "eslint": "eslint --ext '.es' .",
-    "eslint:strict": "eslint --ext '.es' . --max-warnings=0",
+    "eslint": "eslint --ext '.mjs' ./src --max-warnings=0",
     "prepush": "npm run eslint:strict"
   },
   "dependencies": {
     "@rotundasoftware/assert-type": "^6.0.0",
-    "matches-where-query": "^2.0.1",
-    "underscore": "^1.13.6",
-    "escape-string-regexp": "^1.0.5"
+    "escape-string-regexp": "^5.0.0",
+    "matches-where-query": "^2.0.7",
+    "underscore": "^1.13.7"
   },
   "devDependencies": {
-    "@rotundasoftware/eslint-config-rotundasoftware": "^4.1.2",
-    "eslint": "^8.16.0"
+    "@rotundasoftware/eslint-config-rotundasoftware": "^5.0.0",
+    "eslint": "^9.0.0"
   },
   "author": "Rotunda Software",
   "license": "MIT"

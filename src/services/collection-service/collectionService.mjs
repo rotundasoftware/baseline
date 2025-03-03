@@ -3,7 +3,7 @@ import matchesWhereQuery from 'matches-where-query';
 
 import assertType from '@rotundasoftware/assert-type';
 
-import BaseService from './baseService.mjs';
+import BaseService from '../baseService.mjs';
 import CollectionFilter from './collectionFilter.mjs';
 import CollectionSorter from './collectionSorter.mjs';
 
@@ -84,7 +84,7 @@ class CollectionService extends BaseService {
 
 		try {
 			assertType( { id }, 'uuid' );
-		} catch( err ) {
+		} catch{
 			return false;
 		}
 
@@ -93,7 +93,7 @@ class CollectionService extends BaseService {
 		try {
 			this.get( id, fields );
 			return true;
-		} catch( err ) {
+		} catch{
 			return false;
 		}
 	}
