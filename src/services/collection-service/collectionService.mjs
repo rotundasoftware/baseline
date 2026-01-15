@@ -229,26 +229,39 @@ class CollectionService extends BaseService {
 	 * @param {Array<string>|string|undefined} fields - If provided, retrieve only these fields.
 	 * @returns {object} - Object with operation status and a list of records found.
 	 */
-	// #TODO add pagination logic when it's available in Warehouse
-	async fetchList( { where, fields } = {} ) {
+	async fetchList( { where, fields, page, pageSize } = {} ) {
 		assertType( { where }, 'object', 'undefined' );
 		assertType( { fields }, 'string', 'array', 'undefined' );
+		assertType( { page }, 'integer', 'undefined' );
+		assertType( { pageSize }, 'integer', 'undefined' );
+
+		if ( ( page !== undefined && pageSize === undefined ) || ( page === undefined && pageSize !== undefined ) ) {
+			throw new Error( 'Both page and pageSize must be provided together, or neither.' );
+		}
+
+		if ( page !== undefined ) {
+			if ( page <= 0 ) throw new Error( 'page must be greater than 0' );
+			if ( pageSize <= 0 ) throw new Error( 'pageSize must be greater than 0' );
+		}
 
 		if( fields ) fields = _.uniq( [ 'id' ].concat( fields ) );
 
-		let dtos;
+		let records, meta;
 		try {
-			dtos = await this._crudStrategy.fetchList( where, fields, this.constructor.entity );
+			const result = await this._crudStrategy.fetchList( where, fields, this.constructor.entity, page, pageSize );
+			records = result.records;
+			meta = result.meta;
 		} catch( err ) {
 			if( this.#throwOnCrudFailure ) throw err;
 			return { success : false };
 		}
 
-		this.merge( dtos );
+		this.merge( records );
 
 		return {
 			success : true,
-			data : dtos
+			data : records,
+			meta
 		};
 	}
 
