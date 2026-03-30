@@ -225,11 +225,12 @@ class CollectionService extends BaseService {
 
 	/**
 	 * Retrieve a list of records from the server that match the provided query, and add them to the local store.
-	 * @param {object} where - A matches-where-query compliant query object.
-	 * @param {Array<string>|string|undefined} fields - If provided, retrieve only these fields.
-	 * @param {integer} page - Page number, starting from 1. If provided, pageSize must also be provided.
-	 * @param {integer} pageSize - Number of records per page. If provided, page must also be provided.
-	 * @param {Array<{ field : string, direction : 'ascending' | 'descending' }>} orderBy - List of fields to order by, with their corresponding direction. Optional.
+	 * @param {object} [options] - Options for fetching the list of records.
+	 * @param {object} [options.where] - A matches-where-query compliant query object.
+	 * @param {Array<string>|string|undefined} [options.fields] - If provided, retrieve only these fields.
+	 * @param {integer} [options.page] - Page number, starting from 1. If provided, pageSize must also be provided.
+	 * @param {integer} [options.pageSize] - Number of records per page. If provided, page must also be provided.
+	 * @param {Array<{ field : string, direction : 'ascending' | 'descending' }>} [options.orderBy] - List of fields to order by, with their corresponding direction. Optional.
 	 * @returns {object} - Object with operation status and a list of records found.
 	 */
 	async fetchList( { where, fields, page, pageSize, orderBy } = {} ) {
