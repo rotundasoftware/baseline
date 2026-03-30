@@ -251,10 +251,7 @@ class CollectionService extends BaseService {
 
 		if( orderBy !== undefined ) {
 			orderBy.forEach( orderByItem => {
-				// Ensure orderByItem is a non-null, non-array plain object
-				if(
-					typeof orderByItem !== 'object' || orderByItem === null || Array.isArray( orderByItem )
-				) {
+				if( ! ( _.isObject( orderByItem ) && ! _.isArray( orderByItem ) ) ) {
 					throw new Error( 'Each item in orderBy must be an object' );
 				}
 
