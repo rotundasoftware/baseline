@@ -227,6 +227,9 @@ class CollectionService extends BaseService {
 	 * Retrieve a list of records from the server that match the provided query, and add them to the local store.
 	 * @param {object} where - A matches-where-query compliant query object.
 	 * @param {Array<string>|string|undefined} fields - If provided, retrieve only these fields.
+	 * @param {integer} page - Page number, starting from 1. If provided, pageSize must also be provided.
+	 * @param {integer} pageSize - Number of records per page. If provided, page must also be provided.
+	 * @param {Array<{ field : string, direction : 'ascending' | 'descending' }>} orderBy - List of fields to order by, with their corresponding direction. Optional.
 	 * @returns {object} - Object with operation status and a list of records found.
 	 */
 	async fetchList( { where, fields, page, pageSize, orderBy } = {} ) {
@@ -249,7 +252,12 @@ class CollectionService extends BaseService {
 			if( ! Array.isArray( orderBy ) ) throw new Error( 'orderBy must be an array' );
 
 			orderBy.forEach( orderByItem => {
-				if( typeof orderByItem !== 'object' ) throw new Error( 'Each item in orderBy must be an object' );
+				// Ensure orderByItem is a non-null, non-array plain object
+				if(
+					typeof orderByItem !== 'object' || orderByItem === null || Array.isArray( orderByItem )
+				) {
+					throw new Error( 'Each item in orderBy must be an object' );
+				}
 
 				const { field, direction } = orderByItem;
 
