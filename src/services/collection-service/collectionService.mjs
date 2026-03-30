@@ -250,8 +250,6 @@ class CollectionService extends BaseService {
 		}
 
 		if( orderBy !== undefined ) {
-			if( ! Array.isArray( orderBy ) ) throw new Error( 'orderBy must be an array' );
-
 			orderBy.forEach( orderByItem => {
 				// Ensure orderByItem is a non-null, non-array plain object
 				if(
