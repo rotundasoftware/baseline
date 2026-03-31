@@ -225,30 +225,48 @@ class CollectionService extends BaseService {
 
 	/**
 	 * Retrieve a list of records from the server that match the provided query, and add them to the local store.
-	 * @param {object} where - A matches-where-query compliant query object.
-	 * @param {Array<string>|string|undefined} fields - If provided, retrieve only these fields.
+	 * @param {object} [options] - Options for fetching the list of records.
+	 * @param {object} [options.where] - A matches-where-query compliant query object.
+	 * @param {Array<string>|string|undefined} [options.fields] - If provided, retrieve only these fields.
+	 * @param {integer} [options.page] - Page number, starting from 1. If provided, pageSize must also be provided.
+	 * @param {integer} [options.pageSize] - Number of records per page. If provided, page must also be provided.
+	 * @param {Array<{ field : string, direction : 'ascending' | 'descending' }>} [options.orderBy] - List of fields to order by, with their corresponding direction. Optional.
 	 * @returns {object} - Object with operation status and a list of records found.
 	 */
-	async fetchList( { where, fields, page, pageSize } = {} ) {
+	async fetchList( { where, fields, page, pageSize, orderBy } = {} ) {
 		assertType( { where }, 'object', 'undefined' );
 		assertType( { fields }, 'string', 'array', 'undefined' );
 		assertType( { page }, 'integer', 'undefined' );
 		assertType( { pageSize }, 'integer', 'undefined' );
+		assertType( { orderBy }, 'array', 'undefined' );
 
-		if ( ( page !== undefined && pageSize === undefined ) || ( page === undefined && pageSize !== undefined ) ) {
+		if( ( page !== undefined && pageSize === undefined ) || ( page === undefined && pageSize !== undefined ) ) {
 			throw new Error( 'Both page and pageSize must be provided together, or neither.' );
 		}
 
-		if ( page !== undefined ) {
-			if ( page <= 0 ) throw new Error( 'page must be greater than 0' );
-			if ( pageSize <= 0 ) throw new Error( 'pageSize must be greater than 0' );
+		if( page !== undefined ) {
+			if( page <= 0 ) throw new Error( 'page must be greater than 0' );
+			if( pageSize <= 0 ) throw new Error( 'pageSize must be greater than 0' );
+		}
+
+		if( orderBy !== undefined ) {
+			orderBy.forEach( orderByItem => {
+				if( ! ( _.isObject( orderByItem ) && ! _.isArray( orderByItem ) ) ) {
+					throw new Error( 'Each item in orderBy must be an object' );
+				}
+
+				const { field, direction } = orderByItem;
+
+				if( typeof field !== 'string' ) throw new Error( 'orderBy.field must be a string' );
+				if( ! [ 'ascending', 'descending' ].includes( direction ) ) throw new Error( 'orderBy.direction must be either "ascending" or "descending"' );
+			} );
 		}
 
 		if( fields ) fields = _.uniq( [ 'id' ].concat( fields ) );
 
 		let records, meta;
 		try {
-			const result = await this._crudStrategy.fetchList( where, fields, this.constructor.entity, page, pageSize );
+			const result = await this._crudStrategy.fetchList( where, fields, this.constructor.entity, page, pageSize, orderBy );
 			records = result.records;
 			meta = result.meta;
 		} catch( err ) {
