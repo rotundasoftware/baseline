@@ -20,8 +20,9 @@ export default class Baseline {
 				this.#services[ key ].merge( data[ key ] );
 			} else {
 				const value = data[ key ];
-				if( value && typeof value === 'object' ) this.#deepFreeze( value );
-				this.#data[ key ] = value;
+				const storedValue = value && typeof value === 'object' ? this.#deepClone( value ) : value;
+				if( storedValue && typeof storedValue === 'object' ) this.#deepFreeze( storedValue );
+				this.#data[ key ] = storedValue;
 			}
 		} );
 	}
