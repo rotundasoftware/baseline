@@ -58,7 +58,7 @@ export default class Baseline {
 
 		if( key in this.#data ) {
 			let result = this.#data[ key ];
-			if( clone && typeof result === 'object' ) result = this.#deepClone( result );
+			if( clone && result && typeof result === 'object' ) result = this.#deepClone( result );
 			return result;
 		} else {
 			throw new Error( `Key "${ key }" not found in Baseline store` );
@@ -66,12 +66,12 @@ export default class Baseline {
 	}
 
 	/**
-	 * Deep clone object
-	 * @param {object} obj
-	 * @returns {object}
+	 * Deep clone object or array
+	 * @param {object|Array} obj
+	 * @returns {object|Array}
 	 */
 	#deepClone( obj ) {
-		assertType( { obj }, 'object' );
+		assertType( { obj }, 'object', 'array' );
 
 		return JSON.parse( JSON.stringify( obj ) );
 	}
