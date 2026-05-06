@@ -19,7 +19,10 @@ export default class Baseline {
 			if( this.#services[ key ] ) {
 				this.#services[ key ].merge( data[ key ] );
 			} else {
-				this.#data[ key ] = data[ key ];
+				const value = data[ key ];
+				const storedValue = value && typeof value === 'object' ? this.#deepClone( value ) : value;
+				if( storedValue && typeof storedValue === 'object' ) this.#deepFreeze( storedValue );
+				this.#data[ key ] = storedValue;
 			}
 		} );
 	}
@@ -46,13 +49,44 @@ export default class Baseline {
 		return keys.every( key => this.hasKey( key ) );
 	}
 
-	get( key ) {
+	get( key, options = {} ) {
 		assertType( { key }, 'string' );
+		assertType( { options }, 'object' );
+
+		const { clone = false } = options;
+		assertType( { clone }, 'boolean' );
 
 		if( key in this.#data ) {
-			return this.#data[ key ];
+			let result = this.#data[ key ];
+			if( clone && result && typeof result === 'object' ) result = this.#deepClone( result );
+			return result;
 		} else {
 			throw new Error( `Key "${ key }" not found in Baseline store` );
 		}
+	}
+
+	/**
+	 * Deep clone object or array
+	 * @param {object|Array} obj
+	 * @returns {object|Array}
+	 */
+	#deepClone( obj ) {
+		assertType( { obj }, 'object', 'array' );
+
+		return JSON.parse( JSON.stringify( obj ) );
+	}
+
+	/**
+	 * Deep freeze an object.
+	 * @param {object} obj
+	 */
+	#deepFreeze( obj ) {
+		assertType( { obj }, 'object', 'array' );
+
+		Object.freeze( obj );
+
+		Object.values( obj ).forEach( value => {
+			if( value && typeof value === 'object' ) this.#deepFreeze( value );
+		} );
 	}
 }
