@@ -1,5 +1,5 @@
 import _ from 'underscore';
-import matchesWhereQuery from 'matches-where-query';
+import matchesWhereQuery from '@rotundasoftware/matches-where-query';
 
 import assertType from '@rotundasoftware/assert-type';
 
