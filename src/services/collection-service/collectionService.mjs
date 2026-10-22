@@ -8,13 +8,24 @@ import CollectionFilter from './collectionFilter.mjs';
 import CollectionSorter from './collectionSorter.mjs';
 
 /**
+ * @typedef {uuid|integer|string} RecordId - Record ID. Its accepted type depends on the service's static "idType" property.
+ */
+
+/**
  * Baseline service used to manage collections of records.
  */
 class CollectionService extends BaseService {
 	static entity = null;
 	static proxiedMethods = [ 'get', 'fetch', 'upsert', 'destroy', 'isPresent' ];
 
-	#records = [];
+	/**
+	 * Type that record IDs must match, as understood by assert-type: 'uuid' or 'id' (integer or string).
+	 * Subclasses can override it, e.g. `static idType = 'id';`
+	 */
+	static idType = 'uuid';
+
+	// Safe lookup dictionary: No prototype, so IDs like "constructor" or "__proto__" can't clash with built-in properties
+	#records = Object.create( null );
 	#throwOnCrudFailure;
 	#collectionFilter = null;
 	#collectionSorter = null;
@@ -33,6 +44,10 @@ class CollectionService extends BaseService {
 
 		assertType( { crudStrategy, options }, 'object' );
 		assertType( { entity : this.constructor.entity }, 'string' );
+
+		if( ! [ 'uuid', 'id' ].includes( this.constructor.idType ) ) {
+			throw new Error( `Invalid idType "${ this.constructor.idType }": must be "uuid" or "id"` );
+		}
 
 		const { throwOnCrudFailure = true } = options;
 
@@ -62,20 +77,20 @@ class CollectionService extends BaseService {
 	 * Remove all records from the local store.
 	 */
 	empty() {
-		this.#records = {};
+		this.#records = Object.create( null );
 	}
 
 	/**
 	 * List the IDs of all records in the local store.
-	 * @returns {Array<UUID>}
+	 * @returns {Array<RecordId>}
 	 */
 	ids() {
-		return Object.keys( this.#records );
+		return Object.values( this.#records ).map( record => record.id );
 	}
 
 	/**
 	 * Check if a record, or optionally, some of its fields, are present in the local store.
-	 * @param {uuid} id - Record ID.
+	 * @param {RecordId} id - Record ID.
 	 * @param {Array<string>|string|undefined} fields - If provided, also checks that this field or fields are present in the record.
 	 * @returns {boolean}
 	 */
@@ -83,7 +98,7 @@ class CollectionService extends BaseService {
 		assertType( { fields }, 'array', 'string', 'undefined' );
 
 		try {
-			assertType( { id }, 'uuid' );
+			this.#assertId( id );
 		} catch{
 			return false;
 		}
@@ -100,14 +115,14 @@ class CollectionService extends BaseService {
 
 	/**
 	 * Get a record from the local store.
-	 * @param {uuid} id - Record ID.
+	 * @param {RecordId} id - Record ID.
 	 * @param {Array<string>|string} fields - Field or fields to retrieve from the record.
 	 * @param {object} options - Additional options.
 	 * @param {boolean} options.clone - Clone record so it can be operated on. Records are frozen otherwise.
 	 * @returns {any} - Field value, or object with field values.
 	 */
 	get( id, fields, options = {} ) {
-		assertType( { id }, 'uuid' );
+		this.#assertId( id );
 		assertType( { fields }, 'array', 'string' );
 		assertType( { options }, 'object' );
 
@@ -197,12 +212,12 @@ class CollectionService extends BaseService {
 
 	/**
 	 * Retrieve a record from the server and add it to the local store.
-	 * @param {uuid} id - Record ID.
+	 * @param {RecordId} id - Record ID.
 	 * @param {Array<string>|string|undefined} fields - If provided, retrieve only these fields.
 	 * @returns {object} - Object with operation status and record data.
 	 */
 	async fetch( id, fields ) {
-		assertType( { id }, 'uuid' );
+		this.#assertId( id );
 		assertType( { fields }, 'string', 'array', 'undefined' );
 
 		if( fields ) fields = _.uniq( [ 'id' ].concat( fields ) );
@@ -312,11 +327,11 @@ class CollectionService extends BaseService {
 
 	/**
 	 * Destroy a record in the server and remove it from the local store.
-	 * @param {uuid} id - Record ID.
+	 * @param {RecordId} id - Record ID.
 	 * @returns {object} - Object with operation status.
 	 */
 	async destroy( id ) {
-		assertType( { id }, 'uuid' );
+		this.#assertId( id );
 
 		try {
 			await this._crudStrategy.destroy( id, this.constructor.entity );
@@ -332,7 +347,7 @@ class CollectionService extends BaseService {
 
 	/**
 	 * Destroy one or more records in the server and remove them from the local store.
-	 * @param {Array<UUID>} ids - Record IDs.
+	 * @param {Array<RecordId>} ids - Record IDs.
 	 * @returns {object} - Object with operation status.
 	 */
 	async destroyMultiple( ids ) {
@@ -356,7 +371,7 @@ class CollectionService extends BaseService {
 	 */
 	upsertLocal( dto ) {
 		assertType( { dto }, 'object' );
-		assertType( { 'dto.id' : dto.id }, 'uuid' );
+		this.#assertId( dto.id, 'dto.id' );
 
 		const isNew = ! ( dto.id in this.#records );
 		let newLocalRecord;
@@ -375,12 +390,21 @@ class CollectionService extends BaseService {
 
 	/**
 	 * Remove a record from the local store.
-	 * @param {uuid} id - Record ID.
+	 * @param {RecordId} id - Record ID.
 	 */
 	destroyLocal( id ) {
-		assertType( { id }, 'uuid' );
+		this.#assertId( id );
 
 		delete this.#records[ id ];
+	}
+
+	/**
+	 * Assert that a value is a valid record ID, according to the static "idType" property.
+	 * @param {any} value
+	 * @param {string} label
+	 */
+	#assertId( value, label = 'id' ) {
+		assertType( { [ label ] : value }, this.constructor.idType );
 	}
 
 	/**
@@ -408,22 +432,27 @@ class CollectionService extends BaseService {
 			if( value && typeof value === 'object' ) this.#deepFreeze( value );
 		} );
 	}
-	/**
-			 * Creates a proxy for a record, accesible in the service's "active" property.
-			 * @param {uuid} id - Record ID.
-			 */
-	setActive( id ) {
-		assertType( { id }, 'uuid', 'null' );
 
-		this.active = id ? this.createProxy( id ) : null;
+	/**
+	 * Creates a proxy for a record, accesible in the service's "active" property.
+	 * @param {RecordId|null} id - Record ID, or null to clear the active record.
+	 */
+	setActive( id ) {
+		if( id === null ) {
+			this.active = null;
+			return;
+		}
+
+		this.#assertId( id );
+		this.active = this.createProxy( id );
 	}
 
 	/**
-			 * Make a proxy object: an object that contains all methods listed in the static property "proxiedMethods",
-			 * partially applied with the provided record ID.
-			 * @param {uuid} id - Record ID.
-			 * @returns {object}
-			 */
+	 * Make a proxy object: an object that contains all methods listed in the static property "proxiedMethods",
+	 * partially applied with the provided record ID.
+	 * @param {RecordId} id - Record ID.
+	 * @returns {object}
+	 */
 	createProxy( id ) {
 		// This will trhow an error if the record is not present
 		this.get( id, 'id' );
@@ -437,9 +466,9 @@ class CollectionService extends BaseService {
 	}
 
 	/**
-			 * Filtering API
-			 * See CollectionFilter for additional information.
-			 */
+	 * Filtering API
+	 * See CollectionFilter for additional information.
+	 */
 	compileFilter( filterNode ) {
 		return this.#collectionFilter.compileFilter( filterNode );
 	}
@@ -457,13 +486,13 @@ class CollectionService extends BaseService {
 	}
 
 	/**
-			 * Filter node: record passes based on a configurable comparison against one of its fields.
-			 * @param {oject} options
-			 * @param {string} options.fieldName - Existing record field name.
-			 * @param {string} options.comparator - Registered comparator name.
-			 * @param {string} options.needle - Value to compare against.
-			 * @returns {function}
-			 */
+	 * Filter node: record passes based on a configurable comparison against one of its fields.
+	 * @param {object} options
+	 * @param {string} options.fieldName - Existing record field name.
+	 * @param {string} options.comparator - Registered comparator name.
+	 * @param {string} options.needle - Value to compare against.
+	 * @returns {function}
+	 */
 	#filterFieldValue( options ) {
 		assertType( { options }, 'object' );
 
@@ -480,12 +509,12 @@ class CollectionService extends BaseService {
 	}
 
 	/**
-			 * Filter node: compare a filter object against the record's.
-			 * For each fieldName/targetValue pair in the needle, record passes if its field value matches (or is included in the) targetValue.
-			 * @param {object} options
-			 * @param {string} options.needle - Target values keyed by field name.
-			 * @returns {function}
-			 */
+	 * Filter node: compare a filter object against the record's.
+	 * For each fieldName/targetValue pair in the needle, record passes if its field value matches (or is included in the) targetValue.
+	 * @param {object} options
+	 * @param {string} options.needle - Target values keyed by field name.
+	 * @returns {function}
+	 */
 	#filterWhere( options ) {
 		assertType( { options }, 'object' );
 
@@ -494,7 +523,7 @@ class CollectionService extends BaseService {
 		assertType( { needle }, 'object' );
 
 		return recordId => {
-			Object.keys( needle ).all( fieldName => {
+			return Object.keys( needle ).every( fieldName => {
 				const targetValue = needle[ fieldName ];
 				const fieldValue = this.get( recordId, fieldName );
 
